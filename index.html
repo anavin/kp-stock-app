@@ -389,29 +389,83 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
 .snap-label { font-size:11px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.3px;}
 .snap-value { font-size:17px; font-weight:700; color:#0f2c5a; margin-top:2px; font-variant-numeric:tabular-nums;}
 
-/* Top list */
-#dash-top-list .top-row {
-  display:flex; align-items:center; gap:11px; padding:8px 0;
-  border-bottom:1px solid #f0f1f6;
+/* Info strip - hint for consignment data */
+.info-strip {
+  display:flex; align-items:center; gap:10px; padding:9px 14px; margin-bottom:14px;
+  background:linear-gradient(135deg, #fff8e6 0%, #fdf3e0 100%);
+  border:1px solid #f4d8a3; border-radius:10px; color:#8a5e10;
 }
-#dash-top-list .top-row:last-child { border-bottom:none;}
-#dash-top-list .top-rank {
-  width:26px; height:26px; border-radius:8px; background:#f0f4fb;
+.info-strip-icon { font-size:18px;}
+.info-strip-text { font-size:12px; line-height:1.5;}
+.info-strip-text strong { color:#6a4708; font-weight:700;}
+
+/* Top list — enhanced visual */
+#dash-top-list, #sales-top-list-vis {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));
+  gap:8px;
+}
+.top-row, #sales-top-list-vis .top-row {
+  display:grid; grid-template-columns:auto 1fr auto;
+  align-items:center; gap:12px; padding:10px 12px;
+  background:#fff; border:1px solid #e3e6ee; border-radius:10px;
+  transition:all .15s;
+}
+.top-row:hover { background:#f6f9fd; border-color:#c4d1e3;}
+.top-rank {
+  width:34px; height:34px; border-radius:9px; background:#f0f4fb;
   display:flex; align-items:center; justify-content:center;
-  font-size:11px; font-weight:800; color:#0f2c5a; flex-shrink:0;
+  font-size:13px; font-weight:800; color:#0f2c5a; flex-shrink:0;
 }
-#dash-top-list .top-row:nth-child(1) .top-rank { background:linear-gradient(135deg, #ffd700, #f0a500); color:#fff;}
-#dash-top-list .top-row:nth-child(2) .top-rank { background:linear-gradient(135deg, #c0c0c0, #888); color:#fff;}
-#dash-top-list .top-row:nth-child(3) .top-rank { background:linear-gradient(135deg, #cd7f32, #8a5520); color:#fff;}
-#dash-top-list .top-name { flex:1; min-width:0;}
-#dash-top-list .top-name .name { font-size:13px; font-weight:600; color:#0f2c5a;}
-#dash-top-list .top-name .size { font-size:11px; color:#69728a;}
-#dash-top-list .top-bar {
-  flex:1; height:6px; border-radius:3px; background:#eef0f5; max-width:80px;
-  position:relative; overflow:hidden;
+.top-rank-1 { background:linear-gradient(135deg, #ffd700, #f0a500); color:#fff; font-size:18px;}
+.top-rank-2 { background:linear-gradient(135deg, #d0d0d0, #999); color:#fff; font-size:18px;}
+.top-rank-3 { background:linear-gradient(135deg, #d49058, #a35d20); color:#fff; font-size:18px;}
+.top-name { min-width:0;}
+.top-name .name { font-size:13.5px; font-weight:700; color:#0f2c5a; line-height:1.3;}
+.top-name .meta { font-size:11px; color:#69728a; margin-top:2px;}
+.top-name .bar {
+  margin-top:6px; height:5px; border-radius:3px; background:#eef0f5; overflow:hidden;
 }
-#dash-top-list .top-bar-fill { height:100%; background:linear-gradient(90deg, #1e6dd8, #3b82f6); border-radius:3px;}
-#dash-top-list .top-qty { font-size:13px; font-weight:700; color:#0f2c5a; min-width:40px; text-align:right; font-variant-numeric:tabular-nums;}
+.top-name .bar-fill { height:100%; background:linear-gradient(90deg, #1e6dd8, #3b82f6); border-radius:3px; transition:width .4s;}
+.top-stats { text-align:right; min-width:80px;}
+.top-stats .qty { font-size:20px; font-weight:800; color:#0f2c5a; font-variant-numeric:tabular-nums; line-height:1;}
+.top-stats .qty-label { font-size:10px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.4px;}
+.top-stats .value { font-size:12px; color:#1e8a4e; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums;}
+
+/* Branch comparison visual cards */
+.branch-compare-list { display:flex; flex-direction:column; gap:8px;}
+.branch-compare-row {
+  display:grid; grid-template-columns:auto 1fr auto auto;
+  align-items:center; gap:14px; padding:14px 16px;
+  background:#fff; border:1px solid #e3e6ee; border-radius:10px;
+}
+.branch-compare-row.rank-1 { background:linear-gradient(135deg, #fff9e6 0%, #fff 60%); border-color:#f4d8a3;}
+.bc-rank {
+  width:42px; height:42px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; font-weight:800; flex-shrink:0;
+  background:#f0f4fb; color:#0f2c5a;
+}
+.bc-rank.bc-rank-1 { background:linear-gradient(135deg, #ffd700, #f0a500); color:#fff; font-size:20px;}
+.bc-rank.bc-rank-2 { background:linear-gradient(135deg, #d0d0d0, #999); color:#fff; font-size:20px;}
+.bc-rank.bc-rank-3 { background:linear-gradient(135deg, #d49058, #a35d20); color:#fff; font-size:20px;}
+.bc-info { min-width:0;}
+.bc-info .bc-code { font-size:13px; font-weight:700; color:#0f2c5a; margin-bottom:4px;}
+.bc-info .bc-bar { height:10px; background:#eef0f5; border-radius:5px; overflow:hidden;}
+.bc-info .bc-bar-fill { height:100%; background:linear-gradient(90deg, #1e6dd8 0%, #3b82f6 100%); border-radius:5px; position:relative;}
+.bc-info .bc-bar-fill.bc-bar-1 { background:linear-gradient(90deg, #f0a500, #ffd700);}
+.bc-info .bc-meta { font-size:11px; color:#69728a; margin-top:5px;}
+.bc-info .bc-meta strong { color:#0f2c5a;}
+.bc-value { text-align:right; min-width:110px;}
+.bc-value .v-amount { font-size:18px; font-weight:800; color:#0f2c5a; font-variant-numeric:tabular-nums; line-height:1;}
+.bc-value .v-pct { font-size:11px; color:#1e6dd8; font-weight:700; margin-top:3px;}
+.bc-empty { color:#9aa4ba; font-style:italic; font-size:12px; padding:14px;}
+
+/* Top list narrow layout */
+@media (max-width: 720px) {
+  #dash-top-list, #sales-top-list-vis { grid-template-columns:1fr;}
+  .branch-compare-row { grid-template-columns:auto 1fr auto;}
+  .bc-info .bc-meta { display:none;}
+}
 
 /* Branch stock list */
 #dash-branch-stock-list .branch-row {
@@ -597,14 +651,19 @@ body[data-role="staff"] .manager-only { display:none !important; }
   <!-- PERIOD SELECTOR -->
   <div class="dash-period-bar">
     <div class="dash-period-tabs">
-      <button class="dash-period-btn active" data-period="today">วันนี้</button>
-      <button class="dash-period-btn" data-period="week">7 วัน</button>
-      <button class="dash-period-btn" data-period="month">เดือนนี้</button>
+      <button class="dash-period-btn" data-period="thismonth">เดือนนี้</button>
+      <button class="dash-period-btn active" data-period="lastmonth">เดือนที่แล้ว</button>
       <button class="dash-period-btn" data-period="3m">3 เดือน</button>
+      <button class="dash-period-btn" data-period="6m">6 เดือน</button>
       <button class="dash-period-btn" data-period="year">ปีนี้</button>
       <button class="dash-period-btn" data-period="all">ทั้งหมด</button>
     </div>
     <div class="dash-period-info" id="dash-period-info"></div>
+  </div>
+
+  <div class="info-strip">
+    <span class="info-strip-icon">ℹ️</span>
+    <span class="info-strip-text"><strong>ข้อมูลการขายเป็นแบบฝากขาย</strong> — ระบบ KPC อัพเดทยอดให้เดือนละ 1 ครั้ง ดังนั้นยอดของเดือนปัจจุบันอาจยังไม่ครบจนกว่าจะถึงรอบอัพเดทถัดไป</span>
   </div>
 
   <!-- KPI CARDS - 4 columns with trend indicators -->
@@ -655,55 +714,55 @@ body[data-role="staff"] .manager-only { display:none !important; }
       <canvas id="chart-dash-trend" height="190"></canvas>
     </div>
     <div class="card dash-snapshot">
-      <div class="card-header"><h2>📅 วันนี้</h2></div>
+      <div class="card-header"><h2>📅 เดือนล่าสุดที่มีข้อมูล</h2></div>
+      <div class="snap-row">
+        <div class="snap-icon">📆</div>
+        <div class="snap-content">
+          <div class="snap-label">เดือน</div>
+          <div class="snap-value" id="snap-month-name" style="font-size:15px;">—</div>
+        </div>
+      </div>
       <div class="snap-row">
         <div class="snap-icon">💰</div>
         <div class="snap-content">
-          <div class="snap-label">ยอดขายวันนี้</div>
-          <div class="snap-value" id="snap-today-sales">฿0</div>
+          <div class="snap-label">มูลค่าขายรวม</div>
+          <div class="snap-value" id="snap-month-value">฿0</div>
         </div>
       </div>
       <div class="snap-row">
         <div class="snap-icon">🍶</div>
         <div class="snap-content">
-          <div class="snap-label">ขายไป (ขวด)</div>
-          <div class="snap-value" id="snap-today-qty">0</div>
-        </div>
-      </div>
-      <div class="snap-row">
-        <div class="snap-icon">📋</div>
-        <div class="snap-content">
-          <div class="snap-label">ใบเบิก/รายการขาย</div>
-          <div class="snap-value" id="snap-today-tx">0</div>
+          <div class="snap-label">จำนวน (ขวด)</div>
+          <div class="snap-value" id="snap-month-qty">0</div>
         </div>
       </div>
       <div class="snap-row snap-row-divider"></div>
       <div class="snap-row">
         <div class="snap-icon">📊</div>
         <div class="snap-content">
-          <div class="snap-label">เปรียบเทียบเฉลี่ยรายวัน</div>
-          <div class="snap-value" id="snap-today-vs-avg" style="font-size:14px;">—</div>
+          <div class="snap-label">เทียบเดือนก่อนหน้า</div>
+          <div class="snap-value" id="snap-month-vs-prev" style="font-size:14px;">—</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ROW: Branch comparison + Top sellers -->
-  <div class="dash-row">
-    <div class="card">
-      <div class="card-header">
-        <h2>🏢 เปรียบเทียบสาขา</h2>
-        <p class="muted" style="font-size:11px;">มูลค่าขายในช่วงที่เลือก</p>
-      </div>
-      <canvas id="chart-dash-branch" height="200"></canvas>
+  <!-- ROW: Branch comparison (full width) -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🏢 เปรียบเทียบสาขา</h2>
+      <p class="muted" style="font-size:11px;">มูลค่าและจำนวนขายในช่วงที่เลือก • เรียงจากมากไปน้อย</p>
     </div>
-    <div class="card">
-      <div class="card-header">
-        <h2>🔥 Top 5 สินค้าขายดี</h2>
-        <p class="muted" style="font-size:11px;">ในช่วงที่เลือก</p>
-      </div>
-      <div id="dash-top-list"></div>
+    <div id="dash-branch-compare-list"></div>
+  </div>
+
+  <!-- ROW: Top 10 (full width for easier reading) -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🔥 Top 10 สินค้าขายดี</h2>
+      <p class="muted" style="font-size:11px;">ในช่วงที่เลือก • เรียงจากจำนวนมากไปน้อย</p>
     </div>
+    <div id="dash-top-list"></div>
   </div>
 
   <!-- ROW: Stock health + Low stock alerts -->
@@ -909,24 +968,36 @@ body[data-role="staff"] .manager-only { display:none !important; }
     </div>
   </div>
 
-  <div class="charts-grid">
-    <div class="card">
-      <h2>ยอดขายแยกตามสาขา</h2>
-      <canvas id="chart-sales-branch" height="170"></canvas>
+  <div class="card">
+    <div class="card-header">
+      <h2>📈 ยอดขายตามช่วงเวลา <span id="sales-trend-mode" class="muted" style="font-size:11px;font-weight:400;"></span></h2>
     </div>
-    <div class="card">
-      <h2>ยอดขายตามช่วงเวลา <span id="sales-trend-mode" class="muted" style="font-size:11px;font-weight:400;"></span></h2>
-      <canvas id="chart-sales-trend" height="170"></canvas>
-    </div>
+    <canvas id="chart-sales-trend" height="170"></canvas>
   </div>
 
-  <div class="charts-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2>🏢 ยอดขายแยกตามสาขา</h2>
+      <p class="muted" style="font-size:11px;">เรียงจากยอดมากไปน้อย • แสดงสัดส่วนชัดเจน</p>
+    </div>
+    <div id="sales-branch-list-vis"></div>
+    <canvas id="chart-sales-branch" height="170" style="display:none;"></canvas>
+  </div>
+
+  <div class="dash-row">
     <div class="card">
-      <h2>Top 10 สินค้าขายดี</h2>
-      <canvas id="chart-sales-top" height="180"></canvas>
+      <div class="card-header">
+        <h2>🔥 Top 10 สินค้าขายดี</h2>
+        <p class="muted" style="font-size:11px;">เรียงจากจำนวนขายมากไปน้อย</p>
+      </div>
+      <div id="sales-top-list-vis"></div>
+      <canvas id="chart-sales-top" height="180" style="display:none;"></canvas>
     </div>
     <div class="card">
-      <h2>ยอดขายแยกตามขนาด</h2>
+      <div class="card-header">
+        <h2>📊 ยอดขายแยกตามขนาด</h2>
+        <p class="muted" style="font-size:11px;">30 ml. vs 50 ml.</p>
+      </div>
       <canvas id="chart-sales-size" height="180"></canvas>
     </div>
   </div>
@@ -1492,28 +1563,29 @@ $$("#tabs button").forEach(b => {
   });
 });
 
-// ------- DASHBOARD (Redesigned) -------
-let chartDashTrend, chartDashBranch;
-const dashState = { period:"month" };
+// ------- DASHBOARD (Redesigned for monthly consignment data) -------
+let chartDashTrend;
+const dashState = { period:"lastmonth" };
 
 function dashPeriodRange(period){
   const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth();
   const fmt = d => d.toISOString().slice(0,10);
   let from, to=fmt(today);
   switch(period){
-    case "today": from=fmt(today); break;
-    case "week": { const f=new Date(today); f.setDate(f.getDate()-6); from=fmt(f); break; }
-    case "month": from=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-01`; break;
-    case "3m": { const f=new Date(today); f.setMonth(f.getMonth()-2); from=`${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}-01`; break; }
-    case "year": from=`${today.getFullYear()}-01-01`; break;
+    case "thismonth": from = fmt(new Date(y, m, 1)); break;
+    case "lastmonth": from = fmt(new Date(y, m-1, 1)); to = fmt(new Date(y, m, 0)); break;
+    case "3m": { const f=new Date(y, m-2, 1); from=fmt(f); break; }
+    case "6m": { const f=new Date(y, m-5, 1); from=fmt(f); break; }
+    case "year": from = `${y}-01-01`; break;
     case "all":
-    default: from=""; break;
+    default: from = ""; break;
   }
   return { from, to };
 }
 
 function dashPeriodLabel(period){
-  return ({today:"วันนี้",week:"7 วันล่าสุด",month:"เดือนนี้","3m":"3 เดือนล่าสุด",year:"ปีนี้",all:"ตลอดเวลา"})[period] || period;
+  return ({thismonth:"เดือนนี้",lastmonth:"เดือนที่แล้ว","3m":"3 เดือนล่าสุด","6m":"6 เดือนล่าสุด",year:"ปีนี้",all:"ตลอดเวลา"})[period] || period;
 }
 
 function renderDashboard(){
@@ -1528,12 +1600,24 @@ function renderDashboard(){
   const userName = (state.settings && state.settings.userName) ? state.settings.userName : (supaUser ? supaUser.email.split("@")[0] : "Anavin");
   $("#hero-title").textContent = `${greeting} ${userName} 👋`;
 
-  // Today sales (regardless of period)
-  const todayKey = today.toISOString().slice(0,10);
-  const todaySales = state.salesRecords.filter(r=>r.date===todayKey);
-  const todayValue = todaySales.reduce((s,r)=>s+r.value, 0);
-  const todayQty = todaySales.reduce((s,r)=>s+r.qty, 0);
-  const todaySlips = state.slips.filter(s=>s.date===todayKey).length;
+  // Find LATEST month that has data (since sales update monthly)
+  const allDates = state.salesRecords.map(r => r.date).sort();
+  const latestDate = allDates.length ? allDates[allDates.length-1] : todayStr();
+  const latestYM = latestDate.slice(0, 7);
+  const latestMonthName = new Date(latestDate).toLocaleDateString("th-TH", { year:"numeric", month:"long" });
+
+  // Sales in latest available month
+  const latestMonthSales = state.salesRecords.filter(r => r.date.slice(0,7) === latestYM);
+  const latestMonthValue = latestMonthSales.reduce((s,r)=>s+r.value, 0);
+  const latestMonthQty = latestMonthSales.reduce((s,r)=>s+r.qty, 0);
+
+  // Previous month for snapshot
+  const latestDateObj = new Date(latestDate);
+  const prevMonthDate = new Date(latestDateObj.getFullYear(), latestDateObj.getMonth()-1, 1);
+  const prevYM = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth()+1).padStart(2,"0")}`;
+  const prevMonthSales = state.salesRecords.filter(r => r.date.slice(0,7) === prevYM);
+  const prevMonthValue = prevMonthSales.reduce((s,r)=>s+r.value, 0);
+  const prevMonthQty = prevMonthSales.reduce((s,r)=>s+r.qty, 0);
 
   // Period sales
   const periodSales = state.salesRecords.filter(r => !range.from || (r.date>=range.from && r.date<=range.to));
@@ -1571,8 +1655,8 @@ function renderDashboard(){
     });
   });
 
-  // Hero summary
-  $("#hero-summary").innerHTML = `วันนี้ขายได้ <strong>${fmtMoney(todayValue)}</strong> • <strong>${todayQty}</strong> ขวด • <strong>${todaySlips}</strong> ใบเบิก<br>ช่วง <strong>${periodLabel}</strong>: <strong>${fmtMoney(periodValue)}</strong> (${periodQty} ขวด)`;
+  // Hero summary — focus on latest month (since data updates monthly)
+  $("#hero-summary").innerHTML = `ข้อมูลขายล่าสุด <strong>${latestMonthName}</strong>: <strong>${fmtMoney(latestMonthValue)}</strong> • <strong>${latestMonthQty}</strong> ขวด<br>ช่วง <strong>${periodLabel}</strong>: <strong>${fmtMoney(periodValue)}</strong> (${periodQty} ขวด)`;
 
   // Period info
   $("#dash-period-info").innerHTML = range.from ?
@@ -1655,69 +1739,90 @@ function renderDashboard(){
     }
   });
 
-  // ====== Today snapshot ======
-  $("#snap-today-sales").textContent = fmtMoney(todayValue);
-  $("#snap-today-qty").textContent = fmtInt(todayQty);
-  $("#snap-today-tx").textContent = todaySales.length + todaySlips;
+  // ====== Latest month snapshot ======
+  $("#snap-month-name").textContent = latestMonthName;
+  $("#snap-month-value").textContent = fmtMoney(latestMonthValue);
+  $("#snap-month-qty").textContent = fmtInt(latestMonthQty);
 
-  // Compare today vs daily average (last 30 days)
-  const last30 = state.salesRecords.filter(r => {
-    const d = new Date(r.date);
-    return (today - d) < 30*86400000 && r.date !== todayKey;
-  });
-  const avgDaily = last30.length>0 ? (last30.reduce((s,r)=>s+r.value,0)/30) : 0;
-  if(avgDaily > 0){
-    const pct = ((todayValue-avgDaily)/avgDaily*100);
+  // Compare latest vs previous month
+  if(prevMonthValue > 0){
+    const pct = ((latestMonthValue-prevMonthValue)/prevMonthValue*100);
     const sign = pct >= 0 ? "+" : "";
     const cls = pct >= 0 ? "up" : "down";
     const arrow = pct >= 0 ? "▲" : "▼";
-    $("#snap-today-vs-avg").innerHTML = `<span class="kpi-trend ${cls}">${arrow} ${sign}${pct.toFixed(1)}%</span> <span style="color:#69728a;font-size:11px;font-weight:500;">เทียบเฉลี่ย ${fmtMoney(avgDaily)}/วัน</span>`;
+    $("#snap-month-vs-prev").innerHTML = `<span class="kpi-trend ${cls}">${arrow} ${sign}${pct.toFixed(1)}%</span> <span style="color:#69728a;font-size:11px;font-weight:500;">เทียบ ${fmtMoney(prevMonthValue)}</span>`;
+  } else if(latestMonthSales.length === 0) {
+    $("#snap-month-vs-prev").textContent = "ยังไม่มีข้อมูล";
   } else {
-    $("#snap-today-vs-avg").textContent = "ยังไม่มีข้อมูลเปรียบเทียบ";
+    $("#snap-month-vs-prev").innerHTML = `<span class="kpi-trend up">ใหม่</span> <span style="color:#69728a;font-size:11px;">ไม่มีข้อมูลเดือนก่อน</span>`;
   }
 
-  // ====== Branch comparison chart ======
+  // ====== Branch comparison cards (visual, no chart) ======
   const branchData = BRANCHES.map(b => {
-    let v=0; periodSales.forEach(r => { if(r.branchCode===b.code) v+=r.value; });
-    return { code:b.code, name:b.code.split("_")[1]||b.code, value:v };
+    let v=0, q=0;
+    periodSales.forEach(r => { if(r.branchCode===b.code){ v+=r.value; q+=r.qty; } });
+    return { code:b.code, name:b.name, value:v, qty:q };
   }).sort((a,b)=>b.value-a.value);
-  if(chartDashBranch) chartDashBranch.destroy();
-  chartDashBranch = new Chart($("#chart-dash-branch"), {
-    type:"bar",
-    data:{ labels:branchData.map(b=>b.code), datasets:[{
-      data:branchData.map(b=>b.value),
-      backgroundColor: branchData.map((b,i)=> i===0?"#1e6dd8":i===1?"#3b82f6":i===2?"#6ba0e5":"#a8c4ed"),
-      borderRadius:6, barThickness:32
-    }]},
-    options:{
-      indexAxis:"y",
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => fmtMoney(ctx.parsed.x) }}},
-      scales:{ x:{beginAtZero:true, ticks:{callback:v=>v>=1000?(v/1000)+"k":v}}, y:{grid:{display:false}}}
-    }
-  });
+  const branchMaxValue = branchData.length>0 ? (branchData[0].value || 1) : 1;
+  const branchTotalValue = branchData.reduce((s,b)=>s+b.value, 0) || 1;
 
-  // ====== Top 5 sellers ======
+  const bcEl = $("#dash-branch-compare-list");
+  if(branchTotalValue <= 1){
+    bcEl.innerHTML = '<div class="bc-empty">ยังไม่มียอดขายในช่วงนี้ — ข้อมูลขายจาก KPC จะอัพเดทรายเดือน</div>';
+  } else {
+    const medals = ["🥇","🥈","🥉"];
+    bcEl.innerHTML = '<div class="branch-compare-list">' + branchData.map((b,i) => {
+      const pct = (b.value/branchTotalValue*100);
+      const widthPct = (b.value/branchMaxValue*100).toFixed(1);
+      const rankClass = i<3 ? `bc-rank-${i+1}` : "";
+      const barClass = i===0 ? "bc-bar-1" : "";
+      const rankLabel = i<3 ? medals[i] : `#${i+1}`;
+      return `<div class="branch-compare-row ${i===0?'rank-1':''}">
+        <div class="bc-rank ${rankClass}">${rankLabel}</div>
+        <div class="bc-info">
+          <div class="bc-code">${b.code} <span class="muted" style="font-weight:500;">— ${b.name.replace(b.code+" - ","")}</span></div>
+          <div class="bc-bar"><div class="bc-bar-fill ${barClass}" style="width:${widthPct}%;"></div></div>
+          <div class="bc-meta"><strong>${b.qty}</strong> ขวด • คิดเป็น <strong>${pct.toFixed(1)}%</strong> ของยอดรวม</div>
+        </div>
+        <div class="bc-value">
+          <div class="v-amount">${fmtMoney(b.value)}</div>
+          <div class="v-pct">${pct.toFixed(1)}%</div>
+        </div>
+      </div>`;
+    }).join("") + '</div>';
+  }
+
+  // ====== Top 10 best sellers (enhanced visual) ======
   const byProd = {};
   periodSales.forEach(r => {
     byProd[r.barcode] = byProd[r.barcode] || { qty:0, value:0, scent:r.scent, size:r.size };
     byProd[r.barcode].qty += r.qty;
     byProd[r.barcode].value += r.value;
   });
-  const top5 = Object.entries(byProd).sort((a,b)=>b[1].qty-a[1].qty).slice(0,5);
-  const topMaxQty = top5.length>0 ? top5[0][1].qty : 1;
+  const top10 = Object.entries(byProd).sort((a,b)=>b[1].qty-a[1].qty).slice(0,10);
+  const topMaxQty = top10.length>0 ? top10[0][1].qty : 1;
   const topEl = $("#dash-top-list");
-  if(top5.length===0){
+  if(top10.length===0){
     topEl.innerHTML = '<div class="dash-empty">ยังไม่มีข้อมูลในช่วงนี้</div>';
   } else {
-    topEl.innerHTML = top5.map(([bc,d],i)=>`<div class="top-row">
-      <div class="top-rank">#${i+1}</div>
-      <div class="top-name">
-        <div class="name">${d.scent}</div>
-        <div class="size">${d.size} • ${fmtMoney(d.value)}</div>
-      </div>
-      <div class="top-bar"><div class="top-bar-fill" style="width:${(d.qty/topMaxQty*100).toFixed(0)}%;"></div></div>
-      <div class="top-qty">${d.qty}</div>
-    </div>`).join("");
+    topEl.innerHTML = top10.map(([bc,d],i)=>{
+      const widthPct = (d.qty/topMaxQty*100).toFixed(1);
+      const rankCls = i<3 ? `top-rank-${i+1}` : "";
+      const medals = ["🥇","🥈","🥉"];
+      const rankLabel = i<3 ? medals[i] : `#${i+1}`;
+      return `<div class="top-row">
+        <div class="top-rank ${rankCls}">${rankLabel}</div>
+        <div class="top-name">
+          <div class="name">${d.scent}</div>
+          <div class="meta">${d.size} • ${fmtMoney(d.value)}</div>
+          <div class="bar"><div class="bar-fill" style="width:${widthPct}%;"></div></div>
+        </div>
+        <div class="top-stats">
+          <div class="qty">${d.qty}</div>
+          <div class="qty-label">ขวด</div>
+        </div>
+      </div>`;
+    }).join("");
   }
 
   // ====== Branch stock list ======
@@ -2410,27 +2515,41 @@ function renderSales(){
     $("#sales-kpi-branch-sub").textContent = `${topBranchEntry[1]} ขวด`;
   } else { $("#sales-kpi-branch").textContent = "—"; $("#sales-kpi-branch-sub").textContent = "ยังไม่มีข้อมูล"; }
 
-  // Chart: by branch (qty + value) — use filtered data
-  const branchLabels = BRANCHES.map(b=>b.code);
-  const branchQty = BRANCHES.map(b => agg.byBranch[b.code]||0);
-  const branchValue = BRANCHES.map(b => {
-    let v=0; filtered.forEach(r=>{ if(r.branchCode===b.code) v+=r.value; }); return v;
-  });
-  if(chartSalesBranch) chartSalesBranch.destroy();
-  chartSalesBranch = new Chart($("#chart-sales-branch"), {
-    type:"bar",
-    data:{ labels:branchLabels, datasets:[
-      { label:"จำนวน (ขวด)", data:branchQty, backgroundColor:"#1e6dd8", borderRadius:6, yAxisID:"y" },
-      { label:"มูลค่า (฿)", data:branchValue, backgroundColor:"#0f2c5a", borderRadius:6, yAxisID:"y1" }
-    ]},
-    options:{
-      plugins:{legend:{position:"bottom", labels:{boxWidth:12, font:{size:11}}}},
-      scales:{
-        y:{ beginAtZero:true, position:"left", title:{display:true, text:"ขวด"} },
-        y1:{ beginAtZero:true, position:"right", title:{display:true, text:"฿"}, grid:{drawOnChartArea:false}, ticks:{callback:v=>v>=1000?(v/1000)+"k":v}}
-      }
-    }
-  });
+  // Branch comparison — visual cards (like dashboard)
+  const branchDataSales = BRANCHES.map(b => {
+    let v=0, q=0;
+    filtered.forEach(r => { if(r.branchCode===b.code){ v+=r.value; q+=r.qty; } });
+    return { code:b.code, name:b.name, value:v, qty:q };
+  }).sort((a,b)=>b.value-a.value);
+  const sBrMax = branchDataSales.length>0 ? (branchDataSales[0].value || 1) : 1;
+  const sBrTotal = branchDataSales.reduce((s,b)=>s+b.value, 0) || 1;
+  const sBrEl = $("#sales-branch-list-vis");
+  if(sBrTotal <= 1){
+    sBrEl.innerHTML = '<div class="bc-empty">ยังไม่มียอดขายในช่วงนี้</div>';
+  } else {
+    const medals = ["🥇","🥈","🥉"];
+    sBrEl.innerHTML = '<div class="branch-compare-list">' + branchDataSales.map((b,i) => {
+      const pct = (b.value/sBrTotal*100);
+      const widthPct = (b.value/sBrMax*100).toFixed(1);
+      const rankClass = i<3 ? `bc-rank-${i+1}` : "";
+      const barClass = i===0 ? "bc-bar-1" : "";
+      const rankLabel = i<3 ? medals[i] : `#${i+1}`;
+      return `<div class="branch-compare-row ${i===0?'rank-1':''}">
+        <div class="bc-rank ${rankClass}">${rankLabel}</div>
+        <div class="bc-info">
+          <div class="bc-code">${b.code} <span class="muted" style="font-weight:500;">— ${b.name.replace(b.code+" - ","")}</span></div>
+          <div class="bc-bar"><div class="bc-bar-fill ${barClass}" style="width:${widthPct}%;"></div></div>
+          <div class="bc-meta"><strong>${b.qty}</strong> ขวด • คิดเป็น <strong>${pct.toFixed(1)}%</strong> ของยอดรวม</div>
+        </div>
+        <div class="bc-value">
+          <div class="v-amount">${fmtMoney(b.value)}</div>
+          <div class="v-pct">${pct.toFixed(1)}%</div>
+        </div>
+      </div>`;
+    }).join("") + '</div>';
+  }
+  // hide the old chart canvas
+  if(chartSalesBranch){ chartSalesBranch.destroy(); chartSalesBranch=null; }
 
   // Chart: trend — adapts to selected period (daily for short, monthly for long ranges)
   const labels=[]; const dataQty=[]; const dataValue=[];
@@ -2486,14 +2605,33 @@ function renderSales(){
     }
   });
 
-  // Chart: top 10 products
+  // Top 10 — visual list like dashboard
   const topList = Object.entries(agg.byProd).sort((a,b)=>b[1].qty-a[1].qty).slice(0,10);
-  if(chartSalesTop) chartSalesTop.destroy();
-  chartSalesTop = new Chart($("#chart-sales-top"), {
-    type:"bar",
-    data:{ labels: topList.map(([bc,d])=>`${d.scent} ${d.size}`), datasets:[{ data: topList.map(([bc,d])=>d.qty), backgroundColor:"#0f2c5a", borderRadius:5 }]},
-    options:{ indexAxis:"y", plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} }
-  });
+  const topMaxQ = topList.length>0 ? topList[0][1].qty : 1;
+  const sTopEl = $("#sales-top-list-vis");
+  if(topList.length === 0){
+    sTopEl.innerHTML = '<div class="dash-empty">ยังไม่มีข้อมูลในช่วงนี้</div>';
+  } else {
+    const medals2 = ["🥇","🥈","🥉"];
+    sTopEl.innerHTML = topList.map(([bc,d],i) => {
+      const widthPct = (d.qty/topMaxQ*100).toFixed(1);
+      const rankCls = i<3 ? `top-rank-${i+1}` : "";
+      const rankLabel = i<3 ? medals2[i] : `#${i+1}`;
+      return `<div class="top-row">
+        <div class="top-rank ${rankCls}">${rankLabel}</div>
+        <div class="top-name">
+          <div class="name">${d.scent}</div>
+          <div class="meta">${d.size} • ${fmtMoney(d.value)}</div>
+          <div class="bar"><div class="bar-fill" style="width:${widthPct}%;"></div></div>
+        </div>
+        <div class="top-stats">
+          <div class="qty">${d.qty}</div>
+          <div class="qty-label">ขวด</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  if(chartSalesTop){ chartSalesTop.destroy(); chartSalesTop=null; }
 
   // Chart: by size
   const sizeLabels = Object.keys(agg.bySize);
