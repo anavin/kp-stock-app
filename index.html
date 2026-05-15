@@ -274,6 +274,213 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
   .stat .value { font-size:18px;}
 }
 
+/* =================================================
+   NEW DASHBOARD STYLES
+   ================================================= */
+
+/* Hero banner */
+.hero-banner {
+  background:linear-gradient(135deg, #1e6dd8 0%, #0a4cb0 60%, #0f2c5a 100%);
+  border-radius:14px; padding:22px 26px; margin-bottom:16px;
+  color:#fff; display:flex; align-items:center; gap:22px;
+  box-shadow:0 8px 28px rgba(15,44,90,.18);
+  position:relative; overflow:hidden;
+}
+.hero-banner::before {
+  content:""; position:absolute; right:-40px; top:-40px;
+  width:200px; height:200px; background:radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%);
+  border-radius:50%;
+}
+.hero-greeting { flex:1; position:relative; z-index:1;}
+.hero-time { font-size:12px; opacity:.85; font-weight:500; letter-spacing:.3px;}
+.hero-title { font-size:22px; font-weight:700; margin:4px 0 6px; color:#fff; line-height:1.2;}
+.hero-summary { font-size:13px; opacity:.92; line-height:1.5;}
+.hero-summary strong { font-weight:700; color:#fff;}
+.hero-actions { display:flex; gap:8px; flex-wrap:wrap; position:relative; z-index:1;}
+.hero-btn {
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);
+  color:#fff; padding:10px 14px; border-radius:10px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  min-width:90px; transition:all .15s; font-family:inherit;
+}
+.hero-btn:hover { background:rgba(255,255,255,.24); transform:translateY(-1px);}
+.hero-btn-icon { font-size:20px;}
+.hero-btn-label { font-size:11px; font-weight:600; letter-spacing:.2px;}
+
+/* Period bar */
+.dash-period-bar {
+  display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;
+}
+.dash-period-tabs {
+  display:inline-flex; background:#fff; border:1px solid #e3e6ee;
+  border-radius:10px; padding:4px; gap:2px;
+}
+.dash-period-btn {
+  background:transparent; border:none; padding:7px 14px; border-radius:7px;
+  font-size:12px; font-weight:600; cursor:pointer; color:#414a66;
+  font-family:inherit;
+}
+.dash-period-btn:hover { background:#f0f1f6;}
+.dash-period-btn.active { background:#1e6dd8; color:#fff;}
+.dash-period-info { font-size:12px; color:#69728a; font-weight:500;}
+
+/* KPI cards */
+.kpi-grid {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:12px; margin-bottom:16px;
+}
+.kpi-card {
+  background:#fff; border:1px solid #e3e6ee; border-radius:12px;
+  padding:16px 18px; display:flex; align-items:center; gap:14px;
+  position:relative; overflow:hidden;
+  transition:transform .15s, box-shadow .15s;
+}
+.kpi-card:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(15,44,90,.08);}
+.kpi-card::after {
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+  background:#1e6dd8;
+}
+.kpi-card.kpi-sales::after { background:#1e6dd8;}
+.kpi-card.kpi-units::after { background:#1e8a4e;}
+.kpi-card.kpi-stock::after { background:#a8731a;}
+.kpi-card.kpi-alert::after { background:#c4392f;}
+.kpi-icon {
+  width:48px; height:48px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; flex-shrink:0;
+  background:linear-gradient(135deg, #f0f4fb 0%, #e6ecf5 100%);
+}
+.kpi-card.kpi-sales .kpi-icon { background:linear-gradient(135deg, #e6f0fc 0%, #cfdef9 100%);}
+.kpi-card.kpi-units .kpi-icon { background:linear-gradient(135deg, #e7f4ec 0%, #c8e6d3 100%);}
+.kpi-card.kpi-stock .kpi-icon { background:linear-gradient(135deg, #fdf3e0 0%, #fbe5c0 100%);}
+.kpi-card.kpi-alert .kpi-icon { background:linear-gradient(135deg, #fce9e7 0%, #f8c9c4 100%);}
+.kpi-content { flex:1; min-width:0;}
+.kpi-label { font-size:11px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-bottom:3px;}
+.kpi-value { font-size:24px; font-weight:800; color:#0f2c5a; font-variant-numeric:tabular-nums; line-height:1.1; margin-bottom:4px;}
+.kpi-trend { font-size:11.5px; font-weight:600; color:#69728a;}
+.kpi-trend.up { color:#1e8a4e;}
+.kpi-trend.down { color:#c4392f;}
+
+/* Dash rows */
+.dash-row {
+  display:grid; gap:14px; margin-bottom:14px;
+  grid-template-columns: 1fr 1fr;
+}
+.dash-row-main { grid-template-columns: 1.7fr 1fr;}
+.card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;}
+.card-header h2 { font-size:14px; font-weight:700; margin:0;}
+
+/* Today snapshot */
+.dash-snapshot { display:flex; flex-direction:column;}
+.snap-row {
+  display:flex; align-items:center; gap:12px; padding:10px 0;
+  border-bottom:1px dashed #eef0f5;
+}
+.snap-row:last-child { border-bottom:none;}
+.snap-row-divider { border-bottom:none; padding:4px 0;}
+.snap-icon {
+  width:38px; height:38px; border-radius:10px;
+  background:#f0f4fb; display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.snap-content { flex:1; min-width:0;}
+.snap-label { font-size:11px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.3px;}
+.snap-value { font-size:17px; font-weight:700; color:#0f2c5a; margin-top:2px; font-variant-numeric:tabular-nums;}
+
+/* Top list */
+#dash-top-list .top-row {
+  display:flex; align-items:center; gap:11px; padding:8px 0;
+  border-bottom:1px solid #f0f1f6;
+}
+#dash-top-list .top-row:last-child { border-bottom:none;}
+#dash-top-list .top-rank {
+  width:26px; height:26px; border-radius:8px; background:#f0f4fb;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; color:#0f2c5a; flex-shrink:0;
+}
+#dash-top-list .top-row:nth-child(1) .top-rank { background:linear-gradient(135deg, #ffd700, #f0a500); color:#fff;}
+#dash-top-list .top-row:nth-child(2) .top-rank { background:linear-gradient(135deg, #c0c0c0, #888); color:#fff;}
+#dash-top-list .top-row:nth-child(3) .top-rank { background:linear-gradient(135deg, #cd7f32, #8a5520); color:#fff;}
+#dash-top-list .top-name { flex:1; min-width:0;}
+#dash-top-list .top-name .name { font-size:13px; font-weight:600; color:#0f2c5a;}
+#dash-top-list .top-name .size { font-size:11px; color:#69728a;}
+#dash-top-list .top-bar {
+  flex:1; height:6px; border-radius:3px; background:#eef0f5; max-width:80px;
+  position:relative; overflow:hidden;
+}
+#dash-top-list .top-bar-fill { height:100%; background:linear-gradient(90deg, #1e6dd8, #3b82f6); border-radius:3px;}
+#dash-top-list .top-qty { font-size:13px; font-weight:700; color:#0f2c5a; min-width:40px; text-align:right; font-variant-numeric:tabular-nums;}
+
+/* Branch stock list */
+#dash-branch-stock-list .branch-row {
+  display:flex; align-items:center; gap:12px; padding:10px 0;
+  border-bottom:1px solid #f0f1f6;
+}
+#dash-branch-stock-list .branch-row:last-child { border-bottom:none;}
+#dash-branch-stock-list .branch-tag {
+  font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px;
+  background:#e4ecf9; color:#1e6dd8; min-width:62px; text-align:center;
+}
+#dash-branch-stock-list .branch-info { flex:1; min-width:0;}
+#dash-branch-stock-list .branch-name { font-size:12px; color:#414a66; font-weight:500;}
+#dash-branch-stock-list .branch-stats { font-size:11px; color:#69728a; margin-top:2px;}
+#dash-branch-stock-list .branch-stats strong { color:#0f2c5a;}
+#dash-branch-stock-list .branch-bar {
+  flex:1; max-width:120px; height:8px; background:#eef0f5; border-radius:4px; overflow:hidden;
+}
+#dash-branch-stock-list .branch-bar-fill {
+  height:100%; background:linear-gradient(90deg, #1e8a4e, #2dbb6c); border-radius:4px;
+}
+
+/* Low stock list */
+.dash-low-stock #dash-low-stock-list .ls-row {
+  display:flex; align-items:center; gap:10px; padding:7px 10px;
+  background:#fdf3f1; border:1px solid #f5d4cf; border-radius:8px;
+  margin-bottom:6px;
+}
+.dash-low-stock #dash-low-stock-list .ls-row.out {
+  background:#fce9e7; border-color:#f0baad;
+}
+.dash-low-stock #dash-low-stock-list .ls-name { flex:1; font-size:13px; color:#0f2c5a; font-weight:600;}
+.dash-low-stock #dash-low-stock-list .ls-name .size { font-weight:400; color:#69728a; font-size:11px;}
+.dash-low-stock #dash-low-stock-list .ls-qty {
+  font-size:13px; font-weight:700; padding:3px 10px; border-radius:6px;
+  background:#fff; color:#c4392f; min-width:42px; text-align:center;
+}
+
+/* Activity feed */
+#dash-activity-feed .act-row {
+  display:flex; align-items:center; gap:12px; padding:9px 0;
+  border-bottom:1px solid #f0f1f6;
+}
+#dash-activity-feed .act-row:last-child { border-bottom:none;}
+#dash-activity-feed .act-icon {
+  width:34px; height:34px; border-radius:9px;
+  background:#f0f4fb; display:flex; align-items:center; justify-content:center;
+  font-size:15px; flex-shrink:0;
+}
+#dash-activity-feed .act-icon.sale { background:#e7f4ec; }
+#dash-activity-feed .act-icon.slip { background:#e6f0fc; }
+#dash-activity-feed .act-content { flex:1; min-width:0;}
+#dash-activity-feed .act-title { font-size:12.5px; color:#0f2c5a; font-weight:600;}
+#dash-activity-feed .act-meta { font-size:11px; color:#69728a; margin-top:1px;}
+#dash-activity-feed .act-amount { font-size:12.5px; font-weight:700; color:#0f2c5a; font-variant-numeric:tabular-nums; text-align:right;}
+
+/* Empty list */
+.dash-empty { text-align:center; padding:18px 10px; color:#9aa4ba; font-size:12px;}
+
+@media (max-width: 820px) {
+  .hero-banner { flex-direction:column; align-items:stretch; padding:18px; gap:14px;}
+  .hero-actions { justify-content:space-between;}
+  .hero-btn { flex:1; min-width:0;}
+  .dash-row, .dash-row-main { grid-template-columns:1fr;}
+  .kpi-grid { grid-template-columns:repeat(2, 1fr);}
+  .dash-period-tabs { width:100%; overflow-x:auto;}
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns:1fr;}
+}
+
 /* Hide admin-only elements when user is not admin */
 body[data-role="staff"] .admin-only,
 body[data-role="manager"] .admin-only { display:none !important; }
@@ -361,33 +568,167 @@ body[data-role="staff"] .manager-only { display:none !important; }
 
 <!-- =================== DASHBOARD =================== -->
 <section class="page active" id="page-dashboard">
-  <div class="stats-grid">
-    <div class="stat"><div class="label">มูลค่าสต๊อกรวม</div><div class="value" id="kpi-value">฿0</div><div class="delta">ทุกสาขา • ราคาขายปลีก</div></div>
-    <div class="stat success"><div class="label">จำนวนชิ้นในสต๊อก</div><div class="value" id="kpi-units">0</div><div class="delta" id="kpi-units-sub">ขวด</div></div>
-    <div class="stat alert"><div class="label">สินค้าใกล้หมด (≤5)</div><div class="value" id="kpi-low">0</div><div class="delta">รายการที่ต้องเติม</div></div>
-    <div class="stat warn"><div class="label">ใบเบิกที่ออก</div><div class="value" id="kpi-slips">0</div><div class="delta" id="kpi-slips-sub">ทั้งหมด</div></div>
+
+  <!-- HERO BANNER -->
+  <div class="hero-banner">
+    <div class="hero-greeting">
+      <div class="hero-time" id="hero-time">วันที่</div>
+      <h1 class="hero-title" id="hero-title">สวัสดีครับ 👋</h1>
+      <div class="hero-summary" id="hero-summary">กำลังโหลดข้อมูล...</div>
+    </div>
+    <div class="hero-actions">
+      <button class="hero-btn" data-action="new-slip">
+        <span class="hero-btn-icon">📝</span>
+        <span class="hero-btn-label">สร้างใบเบิก</span>
+      </button>
+      <button class="hero-btn" data-action="new-sale">
+        <span class="hero-btn-icon">💰</span>
+        <span class="hero-btn-label">บันทึกการขาย</span>
+      </button>
+      <button class="hero-btn" data-action="low-stock">
+        <span class="hero-btn-icon">⚠️</span>
+        <span class="hero-btn-label">เช็คสต๊อกใกล้หมด</span>
+      </button>
+    </div>
   </div>
 
-  <div class="charts-grid">
-    <div class="card">
-      <h2>สต๊อกแยกตามสาขา</h2>
-      <canvas id="chart-branch" height="170"></canvas>
+  <!-- PERIOD SELECTOR -->
+  <div class="dash-period-bar">
+    <div class="dash-period-tabs">
+      <button class="dash-period-btn active" data-period="today">วันนี้</button>
+      <button class="dash-period-btn" data-period="week">7 วัน</button>
+      <button class="dash-period-btn" data-period="month">เดือนนี้</button>
+      <button class="dash-period-btn" data-period="3m">3 เดือน</button>
+      <button class="dash-period-btn" data-period="year">ปีนี้</button>
+      <button class="dash-period-btn" data-period="all">ทั้งหมด</button>
     </div>
-    <div class="card">
-      <h2>ยอดเบิก 30 วันล่าสุด</h2>
-      <canvas id="chart-trend" height="170"></canvas>
+    <div class="dash-period-info" id="dash-period-info"></div>
+  </div>
+
+  <!-- KPI CARDS - 4 columns with trend indicators -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-sales">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-content">
+        <div class="kpi-label">ยอดขายในช่วง</div>
+        <div class="kpi-value" id="dash-kpi-sales">฿0</div>
+        <div class="kpi-trend" id="dash-kpi-sales-trend"></div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-units">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-content">
+        <div class="kpi-label">ขายไป (ขวด)</div>
+        <div class="kpi-value" id="dash-kpi-qty">0</div>
+        <div class="kpi-trend" id="dash-kpi-qty-trend"></div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-stock">
+      <div class="kpi-icon">🏪</div>
+      <div class="kpi-content">
+        <div class="kpi-label">มูลค่าสต๊อกคงเหลือ</div>
+        <div class="kpi-value" id="dash-kpi-stockvalue">฿0</div>
+        <div class="kpi-trend" id="dash-kpi-stockvalue-sub"></div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-alert">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-content">
+        <div class="kpi-label">สินค้าใกล้หมด</div>
+        <div class="kpi-value" id="dash-kpi-low">0</div>
+        <div class="kpi-trend" id="dash-kpi-low-sub">รายการที่ควรเติมด่วน</div>
+      </div>
     </div>
   </div>
 
-  <div class="charts-grid">
+  <!-- MAIN ROW: Big chart + Today snapshot -->
+  <div class="dash-row dash-row-main">
+    <div class="card dash-chart-main">
+      <div class="card-header">
+        <div>
+          <h2>📈 ยอดขายตามช่วงเวลา</h2>
+          <p class="muted" style="font-size:11px;margin-top:2px;" id="dash-trend-info">ยอดขายเทียบรายวัน/รายเดือน</p>
+        </div>
+      </div>
+      <canvas id="chart-dash-trend" height="190"></canvas>
+    </div>
+    <div class="card dash-snapshot">
+      <div class="card-header"><h2>📅 วันนี้</h2></div>
+      <div class="snap-row">
+        <div class="snap-icon">💰</div>
+        <div class="snap-content">
+          <div class="snap-label">ยอดขายวันนี้</div>
+          <div class="snap-value" id="snap-today-sales">฿0</div>
+        </div>
+      </div>
+      <div class="snap-row">
+        <div class="snap-icon">🍶</div>
+        <div class="snap-content">
+          <div class="snap-label">ขายไป (ขวด)</div>
+          <div class="snap-value" id="snap-today-qty">0</div>
+        </div>
+      </div>
+      <div class="snap-row">
+        <div class="snap-icon">📋</div>
+        <div class="snap-content">
+          <div class="snap-label">ใบเบิก/รายการขาย</div>
+          <div class="snap-value" id="snap-today-tx">0</div>
+        </div>
+      </div>
+      <div class="snap-row snap-row-divider"></div>
+      <div class="snap-row">
+        <div class="snap-icon">📊</div>
+        <div class="snap-content">
+          <div class="snap-label">เปรียบเทียบเฉลี่ยรายวัน</div>
+          <div class="snap-value" id="snap-today-vs-avg" style="font-size:14px;">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW: Branch comparison + Top sellers -->
+  <div class="dash-row">
     <div class="card">
-      <h2>Top 10 สินค้าในสต๊อก</h2>
-      <canvas id="chart-top" height="170"></canvas>
+      <div class="card-header">
+        <h2>🏢 เปรียบเทียบสาขา</h2>
+        <p class="muted" style="font-size:11px;">มูลค่าขายในช่วงที่เลือก</p>
+      </div>
+      <canvas id="chart-dash-branch" height="200"></canvas>
     </div>
     <div class="card">
-      <h2>สินค้าใกล้หมด</h2>
-      <div id="low-stock-list"></div>
+      <div class="card-header">
+        <h2>🔥 Top 5 สินค้าขายดี</h2>
+        <p class="muted" style="font-size:11px;">ในช่วงที่เลือก</p>
+      </div>
+      <div id="dash-top-list"></div>
     </div>
+  </div>
+
+  <!-- ROW: Stock health + Low stock alerts -->
+  <div class="dash-row">
+    <div class="card">
+      <div class="card-header">
+        <h2>📦 สถานะสต๊อกแต่ละสาขา</h2>
+        <p class="muted" style="font-size:11px;">มูลค่าและจำนวนชวดในคลัง</p>
+      </div>
+      <div id="dash-branch-stock-list"></div>
+    </div>
+    <div class="card dash-low-stock">
+      <div class="card-header">
+        <h2>⚠️ ต้องเติมสินค้าด่วน</h2>
+        <p class="muted" style="font-size:11px;">สาขา 01_KPC — สินค้าใกล้หมดหรือหมดแล้ว</p>
+      </div>
+      <div id="dash-low-stock-list"></div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY FEED -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🕒 กิจกรรมล่าสุด</h2>
+      <p class="muted" style="font-size:11px;">10 รายการล่าสุด — ทั้งใบเบิกและการขาย</p>
+    </div>
+    <div id="dash-activity-feed"></div>
   </div>
 </section>
 
@@ -1138,84 +1479,323 @@ $$("#tabs button").forEach(b => {
   });
 });
 
-// ------- DASHBOARD -------
-let chartBranch, chartTrend, chartTop;
+// ------- DASHBOARD (Redesigned) -------
+let chartDashTrend, chartDashBranch;
+const dashState = { period:"month" };
+
+function dashPeriodRange(period){
+  const today = new Date();
+  const fmt = d => d.toISOString().slice(0,10);
+  let from, to=fmt(today);
+  switch(period){
+    case "today": from=fmt(today); break;
+    case "week": { const f=new Date(today); f.setDate(f.getDate()-6); from=fmt(f); break; }
+    case "month": from=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-01`; break;
+    case "3m": { const f=new Date(today); f.setMonth(f.getMonth()-2); from=`${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}-01`; break; }
+    case "year": from=`${today.getFullYear()}-01-01`; break;
+    case "all":
+    default: from=""; break;
+  }
+  return { from, to };
+}
+
+function dashPeriodLabel(period){
+  return ({today:"วันนี้",week:"7 วันล่าสุด",month:"เดือนนี้","3m":"3 เดือนล่าสุด",year:"ปีนี้",all:"ตลอดเวลา"})[period] || period;
+}
+
 function renderDashboard(){
-  let totalUnits=0, totalValue=0, lowCount=0;
+  const today = new Date();
+  const range = dashPeriodRange(dashState.period);
+  const periodLabel = dashPeriodLabel(dashState.period);
+
+  // Hero banner
+  const hour = today.getHours();
+  const greeting = hour<12 ? "อรุณสวัสดิ์" : hour<17 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น";
+  $("#hero-time").textContent = today.toLocaleDateString("th-TH", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+  const userName = supaUser ? supaUser.email.split("@")[0] : "Frank";
+  $("#hero-title").textContent = `${greeting} ${userName} 👋`;
+
+  // Today sales (regardless of period)
+  const todayKey = today.toISOString().slice(0,10);
+  const todaySales = state.salesRecords.filter(r=>r.date===todayKey);
+  const todayValue = todaySales.reduce((s,r)=>s+r.value, 0);
+  const todayQty = todaySales.reduce((s,r)=>s+r.qty, 0);
+  const todaySlips = state.slips.filter(s=>s.date===todayKey).length;
+
+  // Period sales
+  const periodSales = state.salesRecords.filter(r => !range.from || (r.date>=range.from && r.date<=range.to));
+  const periodValue = periodSales.reduce((s,r)=>s+r.value, 0);
+  const periodQty = periodSales.reduce((s,r)=>s+r.qty, 0);
+
+  // Previous period for comparison
+  const prevRange = (() => {
+    if(!range.from) return null;
+    const fromD = new Date(range.from), toD = new Date(range.to);
+    const days = Math.ceil((toD-fromD)/86400000) + 1;
+    const prevTo = new Date(fromD); prevTo.setDate(prevTo.getDate()-1);
+    const prevFrom = new Date(prevTo); prevFrom.setDate(prevFrom.getDate()-days+1);
+    return { from: prevFrom.toISOString().slice(0,10), to: prevTo.toISOString().slice(0,10) };
+  })();
+  let prevValue=0, prevQty=0;
+  if(prevRange){
+    state.salesRecords.forEach(r => {
+      if(r.date>=prevRange.from && r.date<=prevRange.to){
+        prevValue += r.value; prevQty += r.qty;
+      }
+    });
+  }
+  const valueChange = prevValue>0 ? ((periodValue-prevValue)/prevValue*100) : 0;
+  const qtyChange = prevQty>0 ? ((periodQty-prevQty)/prevQty*100) : 0;
+
+  // Stock value across all branches
+  let stockValue=0, stockUnits=0, lowCount=0;
   PRODUCTS.forEach(p=>{
     BRANCHES.forEach(b=>{
-      const q = state.stockByBranch[b.code][p.barcode] || 0;
-      totalUnits += q;
-      totalValue += q * (p.price||0);
-      if(b.code==="01_KPC" && q>0 && q<=state.settings.lowThreshold) lowCount++;
+      const q = state.stockByBranch[b.code]?.[p.barcode] || 0;
+      stockUnits += q;
+      stockValue += q * (p.price||0);
+      if(b.code==="01_KPC" && q<=state.settings.lowThreshold) lowCount++;
     });
   });
-  $("#kpi-value").textContent = fmtMoney(totalValue);
-  $("#kpi-units").textContent = fmtInt(totalUnits);
-  $("#kpi-low").textContent = lowCount;
-  $("#kpi-slips").textContent = state.slips.length;
-  $("#kpi-slips-sub").textContent = state.slips.length>0 ? `ล่าสุด ${thaiDate(state.slips[state.slips.length-1].date)}` : "ยังไม่มีใบเบิก";
 
-  // Chart: branch stock
-  const branchLabels = BRANCHES.map(b=>b.code);
-  const branchData = BRANCHES.map(b=>{
-    let s=0; PRODUCTS.forEach(p=> s+= state.stockByBranch[b.code][p.barcode]||0); return s;
-  });
-  if(chartBranch) chartBranch.destroy();
-  chartBranch = new Chart($("#chart-branch"), {
-    type:"bar",
-    data:{ labels:branchLabels, datasets:[{ label:"ขวด", data:branchData, backgroundColor:"#1e6dd8", borderRadius:6 }]},
-    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-  });
+  // Hero summary
+  $("#hero-summary").innerHTML = `วันนี้ขายได้ <strong>${fmtMoney(todayValue)}</strong> • <strong>${todayQty}</strong> ขวด • <strong>${todaySlips}</strong> ใบเบิก<br>ช่วง <strong>${periodLabel}</strong>: <strong>${fmtMoney(periodValue)}</strong> (${periodQty} ขวด)`;
 
-  // Chart: trend 30 days
-  const now = new Date(); const days=30; const labels=[]; const data=[];
-  for(let i=days-1;i>=0;i--){
-    const d = new Date(now); d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    labels.push(d.toLocaleDateString("th-TH",{day:"2-digit",month:"2-digit"}));
-    let qty = 0;
-    state.slips.forEach(s => { if(s.date===key) s.items.forEach(it=> qty+=it.qty); });
-    data.push(qty);
-  }
-  if(chartTrend) chartTrend.destroy();
-  chartTrend = new Chart($("#chart-trend"), {
-    type:"line",
-    data:{ labels, datasets:[{ data, borderColor:"#0f2c5a", backgroundColor:"rgba(15,44,90,.08)", fill:true, tension:.3, pointRadius:1 }]},
-    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-  });
+  // Period info
+  $("#dash-period-info").innerHTML = range.from ?
+    `📅 ${thaiDate(range.from)} - ${thaiDate(range.to)} • ${periodSales.length} รายการ` :
+    `📅 ตลอดเวลา • ${periodSales.length} รายการ`;
 
-  // Chart: top 10 stock items
-  const totals = PRODUCTS.map(p => {
-    let q=0; BRANCHES.forEach(b=> q+= state.stockByBranch[b.code][p.barcode]||0);
-    return { ...p, total:q };
-  }).filter(p => !p.is_tryme).sort((a,b)=>b.total-a.total).slice(0,10);
-  if(chartTop) chartTop.destroy();
-  chartTop = new Chart($("#chart-top"), {
-    type:"bar",
-    data:{ labels: totals.map(p=>`${p.scent} ${p.size}`), datasets:[{ data: totals.map(p=>p.total), backgroundColor:"#0f2c5a", borderRadius:5 }]},
-    options:{ indexAxis:"y", plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} }
-  });
+  // KPI cards
+  $("#dash-kpi-sales").textContent = fmtMoney(periodValue);
+  $("#dash-kpi-qty").textContent = fmtInt(periodQty);
+  $("#dash-kpi-stockvalue").textContent = fmtMoney(stockValue);
+  $("#dash-kpi-low").textContent = lowCount;
 
-  // Low stock list (branch 01_KPC)
-  const lowList = PRODUCTS.filter(p=>!p.is_tryme).map(p => {
-    const q = state.stockByBranch["01_KPC"][p.barcode]||0;
-    return { ...p, q };
-  }).filter(x => x.q <= state.settings.lowThreshold).sort((a,b)=>a.q-b.q).slice(0,12);
-  const lsEl = $("#low-stock-list");
-  if(lowList.length===0){
-    lsEl.innerHTML = '<div class="empty-state">สต๊อกทุกรายการในสาขา 01_KPC อยู่ในเกณฑ์ปกติ ✓</div>';
+  // Trend indicators
+  if(prevRange){
+    const renderTrend = (id, change, prevVal, unit) => {
+      const el = $(`#${id}`);
+      if(prevVal === 0){ el.textContent = "—"; el.className = "kpi-trend"; return; }
+      const arrow = change >= 0 ? "▲" : "▼";
+      const sign = change >= 0 ? "+" : "";
+      const cls = change >= 0 ? "up" : "down";
+      el.innerHTML = `${arrow} ${sign}${change.toFixed(1)}% <span style="color:#9aa4ba;font-weight:500;">vs ช่วงก่อน</span>`;
+      el.className = `kpi-trend ${cls}`;
+    };
+    renderTrend("dash-kpi-sales-trend", valueChange, prevValue);
+    renderTrend("dash-kpi-qty-trend", qtyChange, prevQty);
   } else {
-    lsEl.innerHTML = '<table class="tbl"><thead><tr><th>รายการ</th><th>ขนาด</th><th class="center">คงเหลือ</th><th class="center">สถานะ</th></tr></thead><tbody>'+
-      lowList.map(x => `<tr>
-        <td>${x.scent}</td>
-        <td>${x.size}</td>
-        <td class="center"><strong>${x.q}</strong></td>
-        <td class="center">${x.q===0 ? '<span class="pill red">หมด</span>' : '<span class="pill amber">ใกล้หมด</span>'}</td>
-      </tr>`).join('')
-      +'</tbody></table>';
+    $("#dash-kpi-sales-trend").textContent = `${periodSales.length} รายการ`;
+    $("#dash-kpi-qty-trend").textContent = "ตลอดเวลา";
+  }
+  $("#dash-kpi-stockvalue-sub").innerHTML = `<strong>${stockUnits}</strong> ขวดทั้งหมด • ${BRANCHES.length} สาขา`;
+
+  // ====== Main Chart: Sales trend ======
+  const labels=[], dataQty=[], dataValue=[];
+  let fromD, toD;
+  if(range.from){
+    fromD = new Date(range.from); toD = new Date(range.to);
+  } else {
+    const dates = state.salesRecords.map(r=>r.date).sort();
+    fromD = dates.length ? new Date(dates[0]) : new Date(Date.now()-30*86400000);
+    toD = new Date();
+  }
+  const totalDays = Math.ceil((toD-fromD)/86400000) + 1;
+  const useMonthly = totalDays > 90;
+  if(useMonthly){
+    const months = {};
+    periodSales.forEach(r => {
+      const ym = r.date.slice(0,7);
+      months[ym] = (months[ym]||0) + r.value;
+    });
+    const keys = Object.keys(months).sort();
+    keys.forEach(k => { labels.push(k); dataValue.push(months[k]); });
+    $("#dash-trend-info").textContent = `แสดงรายเดือน — ${keys.length} เดือน`;
+  } else {
+    for(let d=new Date(fromD); d<=toD; d.setDate(d.getDate()+1)){
+      const key = d.toISOString().slice(0,10);
+      labels.push(d.toLocaleDateString("th-TH",{day:"2-digit",month:"short"}));
+      let v=0; periodSales.forEach(r=>{ if(r.date===key) v+=r.value; });
+      dataValue.push(v);
+    }
+    $("#dash-trend-info").textContent = `แสดงรายวัน — ${totalDays} วัน`;
+  }
+  if(chartDashTrend) chartDashTrend.destroy();
+  chartDashTrend = new Chart($("#chart-dash-trend"), {
+    type:"line",
+    data:{ labels, datasets:[{
+      label:"มูลค่าขาย (฿)",
+      data:dataValue,
+      borderColor:"#1e6dd8",
+      backgroundColor: (ctx) => {
+        const gradient = ctx.chart.ctx.createLinearGradient(0,0,0,200);
+        gradient.addColorStop(0, "rgba(30,109,216,.35)");
+        gradient.addColorStop(1, "rgba(30,109,216,0)");
+        return gradient;
+      },
+      fill:true, tension:.35, pointRadius:2, pointBackgroundColor:"#1e6dd8", borderWidth:2.5
+    }]},
+    options:{
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => fmtMoney(ctx.parsed.y) }}},
+      scales:{ y:{beginAtZero:true, ticks:{callback:v=>v>=1000?(v/1000)+"k":v}}, x:{grid:{display:false}}}
+    }
+  });
+
+  // ====== Today snapshot ======
+  $("#snap-today-sales").textContent = fmtMoney(todayValue);
+  $("#snap-today-qty").textContent = fmtInt(todayQty);
+  $("#snap-today-tx").textContent = todaySales.length + todaySlips;
+
+  // Compare today vs daily average (last 30 days)
+  const last30 = state.salesRecords.filter(r => {
+    const d = new Date(r.date);
+    return (today - d) < 30*86400000 && r.date !== todayKey;
+  });
+  const avgDaily = last30.length>0 ? (last30.reduce((s,r)=>s+r.value,0)/30) : 0;
+  if(avgDaily > 0){
+    const pct = ((todayValue-avgDaily)/avgDaily*100);
+    const sign = pct >= 0 ? "+" : "";
+    const cls = pct >= 0 ? "up" : "down";
+    const arrow = pct >= 0 ? "▲" : "▼";
+    $("#snap-today-vs-avg").innerHTML = `<span class="kpi-trend ${cls}">${arrow} ${sign}${pct.toFixed(1)}%</span> <span style="color:#69728a;font-size:11px;font-weight:500;">เทียบเฉลี่ย ${fmtMoney(avgDaily)}/วัน</span>`;
+  } else {
+    $("#snap-today-vs-avg").textContent = "ยังไม่มีข้อมูลเปรียบเทียบ";
+  }
+
+  // ====== Branch comparison chart ======
+  const branchData = BRANCHES.map(b => {
+    let v=0; periodSales.forEach(r => { if(r.branchCode===b.code) v+=r.value; });
+    return { code:b.code, name:b.code.split("_")[1]||b.code, value:v };
+  }).sort((a,b)=>b.value-a.value);
+  if(chartDashBranch) chartDashBranch.destroy();
+  chartDashBranch = new Chart($("#chart-dash-branch"), {
+    type:"bar",
+    data:{ labels:branchData.map(b=>b.code), datasets:[{
+      data:branchData.map(b=>b.value),
+      backgroundColor: branchData.map((b,i)=> i===0?"#1e6dd8":i===1?"#3b82f6":i===2?"#6ba0e5":"#a8c4ed"),
+      borderRadius:6, barThickness:32
+    }]},
+    options:{
+      indexAxis:"y",
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => fmtMoney(ctx.parsed.x) }}},
+      scales:{ x:{beginAtZero:true, ticks:{callback:v=>v>=1000?(v/1000)+"k":v}}, y:{grid:{display:false}}}
+    }
+  });
+
+  // ====== Top 5 sellers ======
+  const byProd = {};
+  periodSales.forEach(r => {
+    byProd[r.barcode] = byProd[r.barcode] || { qty:0, value:0, scent:r.scent, size:r.size };
+    byProd[r.barcode].qty += r.qty;
+    byProd[r.barcode].value += r.value;
+  });
+  const top5 = Object.entries(byProd).sort((a,b)=>b[1].qty-a[1].qty).slice(0,5);
+  const topMaxQty = top5.length>0 ? top5[0][1].qty : 1;
+  const topEl = $("#dash-top-list");
+  if(top5.length===0){
+    topEl.innerHTML = '<div class="dash-empty">ยังไม่มีข้อมูลในช่วงนี้</div>';
+  } else {
+    topEl.innerHTML = top5.map(([bc,d],i)=>`<div class="top-row">
+      <div class="top-rank">#${i+1}</div>
+      <div class="top-name">
+        <div class="name">${d.scent}</div>
+        <div class="size">${d.size} • ${fmtMoney(d.value)}</div>
+      </div>
+      <div class="top-bar"><div class="top-bar-fill" style="width:${(d.qty/topMaxQty*100).toFixed(0)}%;"></div></div>
+      <div class="top-qty">${d.qty}</div>
+    </div>`).join("");
+  }
+
+  // ====== Branch stock list ======
+  const branchStock = BRANCHES.map(b => {
+    let units=0, value=0;
+    PRODUCTS.forEach(p => {
+      const q = state.stockByBranch[b.code]?.[p.barcode] || 0;
+      units += q;
+      value += q * (p.price||0);
+    });
+    return { code:b.code, name:b.name, units, value };
+  }).sort((a,b)=>b.value-a.value);
+  const maxBranchValue = branchStock.length>0 ? branchStock[0].value || 1 : 1;
+  $("#dash-branch-stock-list").innerHTML = branchStock.map(b => `<div class="branch-row">
+    <div class="branch-tag">${b.code}</div>
+    <div class="branch-info">
+      <div class="branch-name">${b.name.replace(b.code+" - ","")}</div>
+      <div class="branch-stats"><strong>${b.units}</strong> ขวด • <strong>${fmtMoney(b.value)}</strong></div>
+    </div>
+    <div class="branch-bar"><div class="branch-bar-fill" style="width:${(b.value/maxBranchValue*100).toFixed(0)}%;"></div></div>
+  </div>`).join("");
+
+  // ====== Low stock alerts ======
+  const lowList = PRODUCTS.filter(p=>!p.is_tryme).map(p => {
+    const q = state.stockByBranch["01_KPC"]?.[p.barcode] || 0;
+    return { ...p, q };
+  }).filter(x => x.q <= state.settings.lowThreshold).sort((a,b)=>a.q-b.q).slice(0, 8);
+  const lsEl = $("#dash-low-stock-list");
+  if(lowList.length===0){
+    lsEl.innerHTML = '<div class="dash-empty">✓ สต๊อกทุกรายการในสาขา 01_KPC อยู่ในเกณฑ์ปกติ</div>';
+  } else {
+    lsEl.innerHTML = lowList.map(x => `<div class="ls-row ${x.q===0?'out':''}">
+      <div class="ls-name">${x.scent} <span class="size">• ${x.size}</span></div>
+      <div class="ls-qty">${x.q===0?'หมด':x.q+' ขวด'}</div>
+    </div>`).join("");
+  }
+
+  // ====== Activity feed ======
+  const activities = [];
+  state.salesRecords.forEach(r => activities.push({
+    type:"sale", date:r.date, scent:r.scent, size:r.size, qty:r.qty, value:r.value, branch:r.branchCode, time:r.createdAt
+  }));
+  state.slips.forEach(s => activities.push({
+    type:"slip", date:s.date, po:s.po, qty:s.totalQty, value:s.totalValue, branch:s.branchCode, time:s.createdAt
+  }));
+  activities.sort((a,b) => (b.time||b.date).localeCompare(a.time||a.date));
+  const recent = activities.slice(0, 10);
+  const feedEl = $("#dash-activity-feed");
+  if(recent.length===0){
+    feedEl.innerHTML = '<div class="dash-empty">ยังไม่มีกิจกรรม</div>';
+  } else {
+    feedEl.innerHTML = recent.map(a => {
+      if(a.type==="sale"){
+        return `<div class="act-row">
+          <div class="act-icon sale">💰</div>
+          <div class="act-content">
+            <div class="act-title">ขาย ${a.scent} ${a.size} × ${a.qty}</div>
+            <div class="act-meta">${thaiDate(a.date)} • สาขา ${a.branch}</div>
+          </div>
+          <div class="act-amount" style="color:#1e8a4e;">+${fmtMoney(a.value)}</div>
+        </div>`;
+      } else {
+        return `<div class="act-row">
+          <div class="act-icon slip">📋</div>
+          <div class="act-content">
+            <div class="act-title">ใบเบิก ${a.po}</div>
+            <div class="act-meta">${thaiDate(a.date)} • สาขา ${a.branch} • ${a.qty} ขวด</div>
+          </div>
+          <div class="act-amount">${fmtMoney(a.value)}</div>
+        </div>`;
+      }
+    }).join("");
   }
 }
+
+// Period button handler
+document.addEventListener("click", e => {
+  if(e.target.classList.contains("dash-period-btn")){
+    $$(".dash-period-btn").forEach(b=>b.classList.remove("active"));
+    e.target.classList.add("active");
+    dashState.period = e.target.dataset.period;
+    renderDashboard();
+  }
+  // Hero action buttons
+  if(e.target.closest(".hero-btn")){
+    const action = e.target.closest(".hero-btn").dataset.action;
+    if(action==="new-slip") $$("nav.tabs button[data-tab='new']")[0]?.click();
+    if(action==="new-sale") $$("nav.tabs button[data-tab='sales']")[0]?.click();
+    if(action==="low-stock") $$("nav.tabs button[data-tab='stock']")[0]?.click();
+  }
+});
 
 // ------- NEW SLIP -------
 const newSlipState = { branch:"01_KPC", date:todayStr(), search:"", filterSize:"", hideTryme:true, qty:{} };
