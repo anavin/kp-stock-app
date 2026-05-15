@@ -1877,6 +1877,30 @@ body[data-role="staff"] .manager-only { display:none !important; }
   </div>
 
   <div class="card">
+    <h2>📜 ประวัติการ Import — จัดการชุดที่นำเข้า</h2>
+    <p class="muted" style="margin-bottom:10px;">
+      ทุกครั้งที่ Import จาก PDF/Excel ระบบจะบันทึกเป็นชุด — กด <strong>↶ Undo</strong> เพื่อลบทั้งชุด หรือ <strong>ดู</strong> เพื่อเห็นรายการในชุดนั้น
+    </p>
+    <div class="table-wrap" style="max-height:340px;">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>เวลา Import</th>
+            <th>ที่มา</th>
+            <th>ช่วง / Billing</th>
+            <th>สาขา</th>
+            <th class="num">รายการ</th>
+            <th class="num">ขวด</th>
+            <th class="num">มูลค่า</th>
+            <th class="center">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="import-history-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>📤 นำเข้ายอดขายจาก Excel (รายเดือน)</h2>
     <p class="muted" style="margin-bottom:10px;">
       ลากไฟล์ Excel ของ KPC ลงในกล่องด้านล่าง — ระบบจะอ่านอัตโนมัติและบันทึกเป็นรายการขาย<br>
@@ -5072,10 +5096,17 @@ $("#btn-confirm-excel-import")?.addEventListener("click", ()=>{
     state.salesRecords = state.salesRecords.filter(r => !(monthsToReplace.has(r.date.slice(0,7)) && r.branchCode === branch));
   }
 
+  const batchId = "imp_" + Date.now();
+  const recordIds = [];
   let added = 0;
+  let totalQty = 0, totalValue = 0;
+  const dates = [];
   _excelImportData.forEach(r => {
+    const id = "sale_imp_" + batchId + "_" + (added++);
+    recordIds.push(id);
+    totalQty += r.qty; totalValue += r.value; dates.push(r.date);
     state.salesRecords.push({
-      id: "sale_imp_" + Date.now() + "_" + (added++),
+      id,
       date: r.date,
       branchCode: branch,
       barcode: r.barcode,
@@ -5086,11 +5117,27 @@ $("#btn-confirm-excel-import")?.addEventListener("click", ()=>{
       price: r.price,
       value: r.value,
       note: r.note + " [Excel Import]",
+      batchId,
       createdAt: new Date().toISOString()
     });
-    // Update soldByBranch counter
     state.soldByBranch[branch] = state.soldByBranch[branch] || {};
     state.soldByBranch[branch][r.barcode] = (state.soldByBranch[branch][r.barcode]||0) + r.qty;
+  });
+
+  // Save import batch
+  if(!state.imports) state.imports = [];
+  state.imports.push({
+    id: batchId,
+    type: "Excel",
+    timestamp: new Date().toISOString(),
+    source: "Excel Import",
+    from: dates.sort()[0],
+    to: dates.sort()[dates.length-1],
+    branchCode: branch,
+    recordIds,
+    count: added,
+    qty: totalQty,
+    value: totalValue
   });
 
   logAudit("นำเข้ายอดขาย", `${added} รายการเข้าสาขา ${branch}`);
@@ -5100,6 +5147,113 @@ $("#btn-confirm-excel-import")?.addEventListener("click", ()=>{
   toast(`นำเข้า ${added} รายการเรียบร้อย`);
   renderDashboard();
 });
+
+// =====================================================
+// IMPORT HISTORY (track imports as batches, allow undo)
+// =====================================================
+function renderImportHistory(){
+  const body = $("#import-history-body");
+  if(!body) return;
+  const imports = (state.imports||[]).slice().reverse();
+  if(imports.length === 0){
+    body.innerHTML = '<tr><td colspan="8" class="empty-state">ยังไม่มีประวัติการ Import</td></tr>';
+    return;
+  }
+  body.innerHTML = imports.map(b => {
+    const typeIcon = b.type === "PDF" ? "📕" : "📊";
+    const periodStr = b.from && b.to ? `${thaiDate(b.from)} - ${thaiDate(b.to)}` : "—";
+    return `<tr>
+      <td><span class="muted" style="font-size:11px;">${new Date(b.timestamp).toLocaleString("th-TH")}</span></td>
+      <td>${typeIcon} <strong>${b.type}</strong></td>
+      <td>
+        <div style="font-size:12px;">${b.source||"—"}</div>
+        <div class="muted" style="font-size:10px;">${periodStr}</div>
+      </td>
+      <td><span class="pill blue">${b.branchCode}</span></td>
+      <td class="num"><strong>${b.count}</strong></td>
+      <td class="num">${b.qty}</td>
+      <td class="num">${fmtMoney(b.value)}</td>
+      <td class="center">
+        <button class="btn sm imp-view" data-id="${b.id}">ดู</button>
+        <button class="btn sm danger imp-undo" data-id="${b.id}">↶ Undo</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  $$(".imp-undo").forEach(btn => btn.addEventListener("click", async ()=>{
+    const id = btn.dataset.id;
+    const batch = state.imports.find(x => x.id === id);
+    if(!batch) return;
+    const ok = await customConfirm(
+      `ต้องการ <strong>ยกเลิกการ Import นี้</strong>?<br><br>
+       <strong>${batch.type}</strong>: ${batch.source}<br>
+       ${batch.count} รายการ • ${batch.qty} ขวด • ${fmtMoney(batch.value)}<br><br>
+       ระบบจะ <strong>ลบรายการขายทั้งหมด</strong>ในชุดนี้ + คืน soldByBranch counter`,
+      "ยืนยัน Undo Import"
+    );
+    if(!ok) return;
+    // Remove records by id
+    const idsSet = new Set(batch.recordIds);
+    const beforeCount = state.salesRecords.length;
+    const removedRecords = state.salesRecords.filter(r => idsSet.has(r.id));
+    state.salesRecords = state.salesRecords.filter(r => !idsSet.has(r.id));
+    // Reverse soldByBranch counter
+    removedRecords.forEach(r => {
+      if(state.soldByBranch[r.branchCode]?.[r.barcode] != null){
+        state.soldByBranch[r.branchCode][r.barcode] = Math.max(0, state.soldByBranch[r.branchCode][r.barcode] - r.qty);
+      }
+    });
+    // Remove the batch itself
+    state.imports = state.imports.filter(x => x.id !== id);
+    logAudit("Undo Import", `${batch.type} • ${batch.count} รายการ • ${batch.source}`);
+    saveState();
+    renderImportHistory();
+    renderDashboard();
+    toast(`↶ ยกเลิก import ${batch.count} รายการ`);
+  }));
+
+  $$(".imp-view").forEach(btn => btn.addEventListener("click", ()=>{
+    const id = btn.dataset.id;
+    const batch = state.imports.find(x => x.id === id);
+    if(!batch) return;
+    const records = state.salesRecords.filter(r => batch.recordIds.includes(r.id));
+    showImportDetails(batch, records);
+  }));
+}
+
+function showImportDetails(batch, records){
+  const dlg = $("#confirm-dialog");
+  $("#confirm-title").innerHTML = `${batch.type === "PDF" ? "📕" : "📊"} Import #${batch.id.slice(-6)} — ${batch.source||""}`;
+  $("#confirm-message").innerHTML = `
+    <div style="margin-bottom:10px;">
+      <strong>เวลา:</strong> ${new Date(batch.timestamp).toLocaleString("th-TH")}<br>
+      <strong>สาขา:</strong> ${batch.branchCode}<br>
+      <strong>ช่วง:</strong> ${batch.from && batch.to ? `${thaiDate(batch.from)} - ${thaiDate(batch.to)}` : "—"}<br>
+      <strong>รวม:</strong> ${batch.count} รายการ • ${batch.qty} ขวด • ${fmtMoney(batch.value)}
+    </div>
+    <div style="max-height:300px;overflow:auto;border:1px solid #e3e6ee;border-radius:8px;">
+    <table class="tbl" style="font-size:11px;">
+      <thead><tr><th>วันที่</th><th>สินค้า</th><th class="num">จำนวน</th><th class="num">ราคา</th><th class="num">รวม</th></tr></thead>
+      <tbody>${records.map(r=>`<tr>
+        <td>${r.date}</td>
+        <td>${r.scent} <span class="muted">• ${r.size}</span></td>
+        <td class="num">${r.qty}</td>
+        <td class="num">${fmtMoney(r.price)}</td>
+        <td class="num">${fmtMoney(r.value)}</td>
+      </tr>`).join("")}</tbody>
+    </table>
+    </div>
+  `;
+  $("#confirm-ok").style.display = "none";
+  $("#confirm-cancel").textContent = "ปิด";
+  dlg.showModal();
+  // Restore confirm button state when closed
+  dlg.addEventListener("close", function restore(){
+    $("#confirm-ok").style.display = "";
+    $("#confirm-cancel").textContent = "ยกเลิก";
+    dlg.removeEventListener("close", restore);
+  });
+}
 
 // =====================================================
 // PDF IMPORT (KPC Sales Report)
@@ -5315,11 +5469,17 @@ $("#btn-confirm-pdf-import")?.addEventListener("click", ()=>{
     state.salesRecords = state.salesRecords.filter(r => !(r.date.slice(0,7) === ym && r.branchCode === branch));
   }
 
+  const batchId = "imp_" + Date.now();
+  const recordIds = [];
   let added = 0;
+  let totalQty = 0, totalValue = 0;
   _pdfImportData.rows.forEach(r => {
     if(!r.barcode) return;
+    const id = "sale_pdf_" + batchId + "_" + (added++);
+    recordIds.push(id);
+    totalQty += r.qty; totalValue += r.total;
     state.salesRecords.push({
-      id: "sale_pdf_" + Date.now() + "_" + (added++),
+      id,
       date: saleDate,
       branchCode: branch,
       barcode: r.barcode,
@@ -5330,10 +5490,28 @@ $("#btn-confirm-pdf-import")?.addEventListener("click", ()=>{
       price: r.unitCost,
       value: r.total,
       note: `PDF: ${_pdfImportData.billing} • Doc: ${r.docNo}`,
+      batchId,
       createdAt: new Date().toISOString()
     });
     state.soldByBranch[branch] = state.soldByBranch[branch] || {};
     state.soldByBranch[branch][r.barcode] = (state.soldByBranch[branch][r.barcode]||0) + r.qty;
+  });
+
+  // Save import batch
+  if(!state.imports) state.imports = [];
+  state.imports.push({
+    id: batchId,
+    type: "PDF",
+    timestamp: new Date().toISOString(),
+    source: _pdfImportData.billing || "Unknown PDF",
+    from: _pdfImportData.from,
+    to: _pdfImportData.to,
+    branchCode: branch,
+    saleDate,
+    recordIds,
+    count: added,
+    qty: totalQty,
+    value: totalValue
   });
 
   logAudit("Import PDF Sales", `${added} รายการ • Billing: ${_pdfImportData.billing} • ${branch}`);
@@ -5679,6 +5857,7 @@ renderSettings = function(){
   if($("#auto-download-backup")) $("#auto-download-backup").checked = localStorage.getItem("kp_auto_download") === "1";
   renderAuditLog();
   renderBackupList();
+  renderImportHistory();
   setupExcelImport();
   setupPdfImport();
 };
