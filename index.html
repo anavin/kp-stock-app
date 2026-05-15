@@ -14,6 +14,12 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (typeof pdfjsLib !== "undefined") {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+</script>
 <style>
 :root { color-scheme: light; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -440,6 +446,44 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
 .top-stats .qty { font-size:20px; font-weight:800; color:#0f2c5a; font-variant-numeric:tabular-nums; line-height:1;}
 .top-stats .qty-label { font-size:10px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.4px;}
 .top-stats .value { font-size:12px; color:#1e8a4e; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums;}
+
+/* ==== KPC PDF preview (mimics original report) ==== */
+.kpc-report {
+  background:#fff; padding:18px 22px; border:1px solid #c4d1e3; border-radius:8px;
+  font-family:"Courier New","SF Mono",monospace; color:#000; font-size:11pt;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.kpc-report-head { display:flex; justify-content:space-between; align-items:start; margin-bottom:8px; font-weight:700;}
+.kpc-report-head .l { flex:1;}
+.kpc-report-head .c { flex:1; text-align:center; font-size:14pt;}
+.kpc-report-head .r { font-size:9pt;}
+.kpc-report-period { text-align:center; font-weight:700; margin-bottom:10px; font-size:11pt;}
+.kpc-report-meta { display:grid; grid-template-columns:auto 1fr; gap:2px 14px; font-size:10pt; margin-bottom:12px;}
+.kpc-report-meta .lbl { font-weight:700;}
+.kpc-table {
+  width:100%; border-collapse:collapse; font-size:9.5pt; margin-top:8px;
+}
+.kpc-table th, .kpc-table td {
+  padding:3px 5px; border-bottom:1px solid #ddd; text-align:left;
+}
+.kpc-table thead th {
+  border-top:2px solid #000; border-bottom:2px solid #000;
+  background:#fafbfd; font-weight:700; font-family:Arial,sans-serif; font-size:9pt;
+}
+.kpc-table .num { text-align:right; font-variant-numeric:tabular-nums;}
+.kpc-table tfoot td {
+  border-top:2px solid #000; border-bottom:none; font-weight:700; padding:6px 5px;
+}
+.kpc-table tr.unmatched td { background:#fdf3f1; color:#c4392f;}
+.kpc-table tr.unmatched td::after { content:""; }
+.kpc-summary-row {
+  display:flex; justify-content:space-between; padding:5px 0;
+  border-top:1px solid #999; font-size:10pt;
+}
+.kpc-summary-row.grand { font-size:12pt; font-weight:800; border-top:2px solid #000; padding-top:8px;}
+.kpc-match-stats { padding:10px 14px; background:#fff; border-radius:8px; margin-bottom:10px; font-size:12px;}
+.kpc-match-stats .stat-good { color:#1e8a4e; font-weight:700;}
+.kpc-match-stats .stat-bad { color:#c4392f; font-weight:700;}
 
 /* ==== Excel Drop Zone ==== */
 .excel-drop-zone {
@@ -1819,6 +1863,20 @@ body[data-role="staff"] .manager-only { display:none !important; }
   </div>
 
   <div class="card">
+    <h2>📕 นำเข้ายอดขายจาก PDF (KPC Sales Report)</h2>
+    <p class="muted" style="margin-bottom:10px;">
+      ลากไฟล์ PDF ของ KPC (เช่น <code>1000DC260400354_SALES.pdf</code>) ลงในกล่อง<br>
+      ระบบจะ <strong>อ่านวันที่, Billing No., รายการ, ราคา</strong> ให้อัตโนมัติ — ดูตัวอย่างก่อนตัดสินใจ
+    </p>
+    <div class="excel-drop-zone" id="pdf-drop-zone">
+      <div class="excel-drop-icon">📕</div>
+      <div class="excel-drop-text">ลากไฟล์ PDF มาวางที่นี่ หรือ <strong>คลิกเพื่อเลือกไฟล์</strong></div>
+      <div class="excel-drop-hint">รองรับไฟล์ .pdf จาก KPC Sales Report</div>
+      <input type="file" id="pdf-file-input" accept="application/pdf,.pdf" style="display:none;">
+    </div>
+  </div>
+
+  <div class="card">
     <h2>📤 นำเข้ายอดขายจาก Excel (รายเดือน)</h2>
     <p class="muted" style="margin-bottom:10px;">
       ลากไฟล์ Excel ของ KPC ลงในกล่องด้านล่าง — ระบบจะอ่านอัตโนมัติและบันทึกเป็นรายการขาย<br>
@@ -1983,6 +2041,46 @@ body[data-role="staff"] .manager-only { display:none !important; }
   <div class="dialog-body" style="padding:10px;">
     <div id="camera-reader" style="width:100%; min-height:300px; border-radius:8px; overflow:hidden;"></div>
     <p class="muted" style="text-align:center; margin-top:10px; font-size:11px;">หันกล้องไปที่ barcode บนสินค้า ระบบจะอ่านอัตโนมัติ</p>
+  </div>
+</dialog>
+
+<!-- PDF Import Preview Dialog (KPC Sales Report style) -->
+<dialog id="pdf-preview-dialog">
+  <div class="dialog-head">
+    <h3>📕 ตัวอย่าง KPC Sales Report</h3>
+    <button class="btn sm" onclick="document.getElementById('pdf-preview-dialog').close()">✕</button>
+  </div>
+  <div class="dialog-body" style="background:#eef2f7;padding:14px;">
+    <div id="pdf-preview-content"></div>
+    <div class="form-row" style="margin-top:14px;">
+      <div class="field">
+        <label>📅 ใช้วันที่</label>
+        <select id="pdf-import-date-mode">
+          <option value="period-end">วันสุดท้ายของช่วง (เช่น 30.04.2026)</option>
+          <option value="period-start">วันแรกของช่วง (เช่น 01.04.2026)</option>
+          <option value="custom">กำหนดเอง</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>วันที่กำหนดเอง</label>
+        <input type="date" id="pdf-import-custom-date" disabled>
+      </div>
+      <div class="field">
+        <label>🏢 สาขาเป้าหมาย</label>
+        <select id="pdf-import-target-branch"></select>
+      </div>
+      <div class="field">
+        <label>โหมด</label>
+        <select id="pdf-import-replace-mode">
+          <option value="append">เพิ่มข้อมูล (Append)</option>
+          <option value="replace">แทนที่เดือนนี้ (Replace month)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="dialog-foot">
+    <button class="btn" onclick="document.getElementById('pdf-preview-dialog').close()">ยกเลิก</button>
+    <button class="btn primary" id="btn-confirm-pdf-import">✓ นำเข้าทั้งหมด</button>
   </div>
 </dialog>
 
@@ -5004,6 +5102,249 @@ $("#btn-confirm-excel-import")?.addEventListener("click", ()=>{
 });
 
 // =====================================================
+// PDF IMPORT (KPC Sales Report)
+// =====================================================
+let _pdfImportData = null;
+
+function setupPdfImport(){
+  const drop = $("#pdf-drop-zone");
+  const inp = $("#pdf-file-input");
+  if(!drop || drop.dataset.bound) return;
+  drop.dataset.bound = "1";
+  drop.addEventListener("click", ()=> inp.click());
+  drop.addEventListener("dragover", e=>{ e.preventDefault(); drop.classList.add("dragging"); });
+  drop.addEventListener("dragleave", ()=> drop.classList.remove("dragging"));
+  drop.addEventListener("drop", e=>{
+    e.preventDefault(); drop.classList.remove("dragging");
+    const f = e.dataTransfer.files[0]; if(f) handlePdfFile(f);
+  });
+  inp.addEventListener("change", e=>{
+    const f = e.target.files[0]; if(f) handlePdfFile(f);
+  });
+}
+
+async function extractPdfText(file){
+  if(typeof pdfjsLib === "undefined") throw new Error("PDF library ยังไม่โหลด");
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: new Uint8Array(buf)}).promise;
+  const lines = [];
+  for(let p = 1; p <= pdf.numPages; p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    // Group items by Y position to reconstruct lines
+    const byY = {};
+    content.items.forEach(it => {
+      const y = Math.round(it.transform[5]);
+      if(!byY[y]) byY[y] = [];
+      byY[y].push({ x: it.transform[4], str: it.str });
+    });
+    Object.keys(byY).sort((a,b)=>b-a).forEach(y => {
+      const sorted = byY[y].sort((a,b)=> a.x - b.x);
+      lines.push(sorted.map(s=>s.str).join(" ").trim());
+    });
+  }
+  return lines;
+}
+
+function parseKpcSalesPdf(lines){
+  const result = {
+    billing:"", from:"", to:"", vendorCode:"", vendorName:"",
+    rows:[], totals:{qty:0, exclVat:0, vat:0, total:0}
+  };
+  // Find date range
+  for(const line of lines){
+    const m1 = line.match(/From\s+(\d{2})\.(\d{2})\.(\d{4})\s+To\s+(\d{2})\.(\d{2})\.(\d{4})/i);
+    if(m1){
+      result.from = `${m1[3]}-${m1[2]}-${m1[1]}`;
+      result.to = `${m1[6]}-${m1[5]}-${m1[4]}`;
+    }
+    const m2 = line.match(/Billing\s*No\.?:?\s*([A-Z0-9]+)/i);
+    if(m2) result.billing = m2[1];
+    const m3 = line.match(/Vendor\s*code:?\s*(\d+)\s*Name:?\s*(.+?)$/i);
+    if(m3){ result.vendorCode = m3[1]; result.vendorName = m3[2].trim(); }
+
+    // Row pattern: ARTICLE DESCRIPTION REFERENCE DOC.NO. UNIT_COST QUANTITY TOTAL_COST
+    const m4 = line.match(/^(\d{7,8})\s+(.+?)\s+(\d{13})\s+(\d{8,12})\s+([\d,]+\.\d{1,2})\s+(\d+\.\d+)\s+([\d,]+\.\d{1,2})$/);
+    if(m4){
+      result.rows.push({
+        article: m4[1],
+        description: m4[2].trim(),
+        barcode: m4[3],
+        docNo: m4[4],
+        unitCost: parseFloat(m4[5].replace(/,/g,"")),
+        qty: parseFloat(m4[6]),
+        total: parseFloat(m4[7].replace(/,/g,""))
+      });
+    }
+
+    // Totals
+    const mTotal = line.match(/TOTAL BY VENDOR.*?(\d+\.?\d*)\s+([\d,]+\.\d{2})/i);
+    if(mTotal){
+      result.totals.qty = parseFloat(mTotal[1]);
+      result.totals.exclVat = parseFloat(mTotal[2].replace(/,/g,""));
+    }
+    const mVat = line.match(/Exclude\s+VAT.*?([\d,]+\.\d{2})/i);
+    if(mVat) result.totals.vat = parseFloat(mVat[1].replace(/,/g,""));
+    const mGrand = line.match(/Total\s+by\s+vendor\s*\+\s*VAT[:]?\s*([\d,]+\.\d{2})/i);
+    if(mGrand) result.totals.total = parseFloat(mGrand[1].replace(/,/g,""));
+  }
+  return result;
+}
+
+async function handlePdfFile(file){
+  try{
+    toast("กำลังอ่าน PDF...");
+    const lines = await extractPdfText(file);
+    const data = parseKpcSalesPdf(lines);
+    if(data.rows.length === 0){ toast("ไม่พบรายการขายใน PDF", true); return; }
+
+    // Match each row to product
+    data.rows.forEach(r => {
+      const p = PRODUCTS.find(x => x.barcode === r.barcode) ||
+                PRODUCTS.find(x => x.goods_code === r.article);
+      r.product = p;
+      r.matched = !!p;
+      r.scent = p?.scent || r.description.replace(/LPF\s+\d+ML\s+/i,"").replace(/EAU DE PARFUM|LE PARFUM|EDP EXTRAIT/i,"").trim();
+      r.size = p?.size || (r.description.match(/(\d+)ML/i)?.[1] + " ml.") || "";
+    });
+
+    _pdfImportData = data;
+    showPdfPreview(data);
+  }catch(e){
+    console.error(e);
+    toast("อ่าน PDF ล้มเหลว: " + e.message, true);
+  }
+}
+
+function showPdfPreview(data){
+  const matched = data.rows.filter(r => r.matched).length;
+  const unmatched = data.rows.length - matched;
+  const thaiPeriodFrom = data.from ? thaiDate(data.from) : "—";
+  const thaiPeriodTo = data.to ? thaiDate(data.to) : "—";
+
+  const html = `
+    <div class="kpc-match-stats">
+      <strong>📊 สรุปการอ่าน PDF:</strong>
+      จับคู่สินค้าได้ <span class="stat-good">${matched} รายการ</span>
+      ${unmatched>0 ? `• <span class="stat-bad">⚠️ ${unmatched} รายการ ไม่พบในฐานข้อมูลสินค้า</span>` : "• ✓ ครบทุกรายการ"}
+      • ช่วง <strong>${thaiPeriodFrom} – ${thaiPeriodTo}</strong>
+    </div>
+
+    <div class="kpc-report">
+      <div class="kpc-report-head">
+        <div class="l">PROG: ZFAPIF27</div>
+        <div class="c">KING POWER CORPORATION<br><span style="font-size:11pt;">SALES REPORT</span></div>
+        <div class="r">Page 1/1</div>
+      </div>
+      <div class="kpc-report-period">From ${data.from?.replace(/-/g,".")?.split(".").reverse().join(".") || "—"} To ${data.to?.replace(/-/g,".")?.split(".").reverse().join(".") || "—"}</div>
+      <div class="kpc-report-meta">
+        <div class="lbl">Billing No.:</div><div>${data.billing||"—"}</div>
+        <div class="lbl">Vendor code:</div><div>${data.vendorCode||"—"} &nbsp;&nbsp; Name: ${data.vendorName||"—"}</div>
+      </div>
+
+      <table class="kpc-table">
+        <thead>
+          <tr>
+            <th>ARTICLE</th>
+            <th>DESCRIPTION</th>
+            <th>REFERENCE</th>
+            <th>DOC. NO.</th>
+            <th class="num">UNIT COST</th>
+            <th class="num">QUANTITY</th>
+            <th class="num">TOTAL COST</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.rows.map(r => `<tr class="${r.matched?'':'unmatched'}">
+            <td>${r.article}</td>
+            <td>${r.description}${r.matched?'':' ⚠️'}</td>
+            <td>${r.barcode}</td>
+            <td>${r.docNo}</td>
+            <td class="num">${r.unitCost.toFixed(2)}</td>
+            <td class="num">${r.qty.toFixed(3)}</td>
+            <td class="num">${r.total.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+          </tr>`).join("")}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="text-align:right;">TOTAL BY VENDOR: ${data.vendorCode} ${data.vendorName}</td>
+            <td class="num">${data.totals.qty || data.rows.reduce((s,r)=>s+r.qty,0).toFixed(3)}</td>
+            <td class="num">${(data.totals.exclVat || data.rows.reduce((s,r)=>s+r.total,0)).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+          </tr>
+          <tr><td colspan="6" style="text-align:right;border-top:none;">Exclude VAT 7%</td><td class="num" style="border-top:none;">${data.totals.vat.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>
+          <tr><td colspan="6" style="text-align:right;border-top:none;">Total by vendor + VAT:</td><td class="num" style="border-top:none;">${data.totals.total.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+  $("#pdf-preview-content").innerHTML = html;
+
+  // Populate target branch and other selectors
+  const tb = $("#pdf-import-target-branch");
+  if(tb.options.length === 0){
+    tb.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  }
+  // Set default custom date to period end
+  $("#pdf-import-custom-date").value = data.to || todayStr();
+  $("#pdf-preview-dialog").showModal();
+}
+
+document.addEventListener("change", e => {
+  if(e.target.id === "pdf-import-date-mode"){
+    $("#pdf-import-custom-date").disabled = e.target.value !== "custom";
+  }
+});
+
+$("#btn-confirm-pdf-import")?.addEventListener("click", ()=>{
+  if(!_pdfImportData) return;
+  const branch = $("#pdf-import-target-branch").value || "01_KPC";
+  const dateMode = $("#pdf-import-date-mode").value;
+  const customDate = $("#pdf-import-custom-date").value;
+  const replaceMode = $("#pdf-import-replace-mode").value;
+
+  let saleDate;
+  if(dateMode === "period-end") saleDate = _pdfImportData.to;
+  else if(dateMode === "period-start") saleDate = _pdfImportData.from;
+  else saleDate = customDate;
+
+  if(!saleDate){ toast("ไม่สามารถระบุวันที่ได้", true); return; }
+
+  // Replace mode: remove existing sales in that month for branch
+  if(replaceMode === "replace"){
+    const ym = saleDate.slice(0,7);
+    state.salesRecords = state.salesRecords.filter(r => !(r.date.slice(0,7) === ym && r.branchCode === branch));
+  }
+
+  let added = 0;
+  _pdfImportData.rows.forEach(r => {
+    if(!r.barcode) return;
+    state.salesRecords.push({
+      id: "sale_pdf_" + Date.now() + "_" + (added++),
+      date: saleDate,
+      branchCode: branch,
+      barcode: r.barcode,
+      scent: r.scent,
+      size: r.size,
+      goods_code: r.product?.goods_code || r.article,
+      qty: r.qty,
+      price: r.unitCost,
+      value: r.total,
+      note: `PDF: ${_pdfImportData.billing} • Doc: ${r.docNo}`,
+      createdAt: new Date().toISOString()
+    });
+    state.soldByBranch[branch] = state.soldByBranch[branch] || {};
+    state.soldByBranch[branch][r.barcode] = (state.soldByBranch[branch][r.barcode]||0) + r.qty;
+  });
+
+  logAudit("Import PDF Sales", `${added} รายการ • Billing: ${_pdfImportData.billing} • ${branch}`);
+  saveState();
+  $("#pdf-preview-dialog").close();
+  _pdfImportData = null;
+  toast(`✓ นำเข้า ${added} รายการเรียบร้อย`);
+  renderDashboard();
+});
+
+// =====================================================
 // RECONCILIATION
 // =====================================================
 function renderReconcile(){
@@ -5339,6 +5680,7 @@ renderSettings = function(){
   renderAuditLog();
   renderBackupList();
   setupExcelImport();
+  setupPdfImport();
 };
 
 const _saveSettingsBtn = $("#btn-save-settings");
