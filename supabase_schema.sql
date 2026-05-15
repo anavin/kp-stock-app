@@ -79,11 +79,15 @@ $$ LANGUAGE sql STABLE;
 ALTER TABLE public.app_state ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
--- ลบ policy เก่า
+-- ลบ policy เก่าและใหม่ (กันรันซ้ำ)
 DROP POLICY IF EXISTS "app_state read for authenticated" ON public.app_state;
 DROP POLICY IF EXISTS "app_state write for authenticated" ON public.app_state;
+DROP POLICY IF EXISTS "app_state read all authenticated" ON public.app_state;
+DROP POLICY IF EXISTS "app_state write for admin/manager" ON public.app_state;
 DROP POLICY IF EXISTS "audit_log read for authenticated" ON public.audit_log;
 DROP POLICY IF EXISTS "audit_log insert for authenticated" ON public.audit_log;
+DROP POLICY IF EXISTS "audit_log read all" ON public.audit_log;
+DROP POLICY IF EXISTS "audit_log insert self" ON public.audit_log;
 
 -- READ: ทุก authenticated user อ่านได้
 CREATE POLICY "app_state read all authenticated" ON public.app_state
@@ -103,9 +107,19 @@ CREATE POLICY "audit_log insert self" ON public.audit_log
   FOR INSERT TO authenticated WITH CHECK (true);
 
 -- ===================================================================
--- เปิด Realtime
+-- เปิด Realtime (idempotent — รันซ้ำได้)
 -- ===================================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE public.app_state;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'app_state'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.app_state;
+  END IF;
+END $$;
 
 -- ===================================================================
 -- การตั้ง role ให้ user
