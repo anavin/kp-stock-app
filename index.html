@@ -1811,7 +1811,7 @@ document.addEventListener("click", e => {
 });
 
 // ------- NEW SLIP -------
-const newSlipState = { branch:"01_KPC", date:todayStr(), search:"", filterSize:"", hideTryme:true, qty:{} };
+const newSlipState = { branch:"01_KPC", date:todayStr(), po:"", dn:"", search:"", filterSize:"", hideTryme:true, qty:{} };
 
 function renderNewSlip(){
   // branch dropdown
@@ -1874,6 +1874,8 @@ $("#new-branch")?.addEventListener("change", e=>{ newSlipState.branch=e.target.v
 document.addEventListener("input", e=>{
   if(e.target.id==="new-search"){ newSlipState.search=e.target.value; renderNewItems(); }
   if(e.target.id==="new-date"){ newSlipState.date=e.target.value; }
+  if(e.target.id==="new-po"){ newSlipState.po=e.target.value; }
+  if(e.target.id==="new-dn"){ newSlipState.dn=e.target.value; }
 });
 document.addEventListener("change", e=>{
   if(e.target.id==="new-filter-size"){ newSlipState.filterSize=e.target.value; renderNewItems(); }
@@ -1881,6 +1883,16 @@ document.addEventListener("change", e=>{
 });
 document.addEventListener("click", e=>{
   if(e.target.id==="btn-clear-qty"){ newSlipState.qty={}; renderNewItems(); }
+  if(e.target.id==="btn-reset-po"){
+    newSlipState.po = "";
+    $("#new-po").value = nextPONumber();
+    toast("รีเซ็ตเป็นเลข PO อัตโนมัติ");
+  }
+  if(e.target.id==="btn-reset-dn"){
+    newSlipState.dn = "";
+    $("#new-dn").value = nextDeliveryNumber();
+    toast("รีเซ็ตเป็นเลข Delivery อัตโนมัติ");
+  }
 });
 
 function buildSlipFromForm(){
@@ -1925,7 +1937,7 @@ $("#btn-save")?.addEventListener("click", ()=>{
   state.slips.push(slip);
   saveState();
   toast(`บันทึกใบเบิก ${slip.po} เรียบร้อย (+${slip.totalQty} ขวด ที่ ${slip.branchCode})`);
-  newSlipState.qty = {}; $("#new-note").value="";
+  newSlipState.qty = {}; newSlipState.po = ""; newSlipState.dn = ""; $("#new-note").value="";
   renderNewSlip();
 });
 
