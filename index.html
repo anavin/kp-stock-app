@@ -474,7 +474,17 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
 .kpc-table tfoot td {
   border-top:2px solid #000; border-bottom:none; font-weight:700; padding:6px 5px;
 }
-.kpc-table tr.unmatched td { background:#fdf3f1; color:#c4392f;}
+.kpc-table tr.unmatched td { background:#fdf3f1;}
+.kpc-table tr.unmatched td strong, .kpc-table tr.unmatched td { color:#c4392f;}
+.kpc-table tr.excluded td { opacity:.4; text-decoration:line-through;}
+.kpc-table .edit-inp {
+  padding:3px 6px; border:1px solid #c4d1e3; border-radius:4px;
+  font-size:10pt; font-family:inherit; background:#fff;
+}
+.kpc-table .edit-inp:focus { outline:2px solid #1e6dd8; outline-offset:-1px; border-color:#1e6dd8;}
+.kpc-table .row-toggle {
+  padding:2px 8px; font-size:11px; min-width:24px;
+}
 .kpc-table tr.unmatched td::after { content:""; }
 .kpc-summary-row {
   display:flex; justify-content:space-between; padding:5px 0;
@@ -5059,23 +5069,7 @@ function handleExcelFile(file){
       if(records.length === 0){ toast("ไม่พบรายการที่ valid ในไฟล์", true); return; }
 
       _excelImportData = records;
-      // Show preview
-      $("#excel-preview-summary").innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-          <div class="kpi-card kpi-units"><div class="kpi-icon">📊</div><div class="kpi-content"><div class="kpi-label">จำนวนรายการ</div><div class="kpi-value">${records.length}</div></div></div>
-          <div class="kpi-card kpi-sales"><div class="kpi-icon">💰</div><div class="kpi-content"><div class="kpi-label">มูลค่ารวม</div><div class="kpi-value">${fmtMoney(records.reduce((s,r)=>s+r.value,0))}</div></div></div>
-          <div class="kpi-card kpi-stock"><div class="kpi-icon">📦</div><div class="kpi-content"><div class="kpi-label">รวม (ขวด)</div><div class="kpi-value">${records.reduce((s,r)=>s+r.qty,0)}</div></div></div>
-        </div>`;
-      const previewRows = records.slice(0, 50).map(r => `<tr>
-        <td>${r.date}</td>
-        <td><span class="muted">${r.barcode}</span></td>
-        <td>${r.scent}</td>
-        <td>${r.size}</td>
-        <td class="num">${r.qty}</td>
-        <td class="num">${fmtMoney(r.price)}</td>
-        <td class="num">${fmtMoney(r.value)}</td>
-      </tr>`).join("");
-      $("#excel-preview-body").innerHTML = previewRows + (records.length>50 ? `<tr><td colspan="7" class="empty-state">... และอีก ${records.length-50} รายการ</td></tr>` : "");
+      renderExcelPreview();
       $("#excel-preview-dialog").showModal();
 
     }catch(e){ console.error(e); toast("อ่านไฟล์ล้มเหลว: "+e.message, true); }
@@ -5083,8 +5077,65 @@ function handleExcelFile(file){
   reader.readAsArrayBuffer(file);
 }
 
+function renderExcelPreview(){
+  if(!_excelImportData) return;
+  const records = _excelImportData;
+  const active = records.filter(r => !r.excluded);
+  $("#excel-preview-summary").innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+      <div class="kpi-card kpi-units"><div class="kpi-icon">📊</div><div class="kpi-content"><div class="kpi-label">จำนวนรายการ</div><div class="kpi-value">${active.length}<small style="font-size:11px;color:#69728a;font-weight:500;"> / ${records.length}</small></div></div></div>
+      <div class="kpi-card kpi-sales"><div class="kpi-icon">💰</div><div class="kpi-content"><div class="kpi-label">มูลค่ารวม</div><div class="kpi-value">${fmtMoney(active.reduce((s,r)=>s+(parseFloat(r.value)||0),0))}</div></div></div>
+      <div class="kpi-card kpi-stock"><div class="kpi-icon">📦</div><div class="kpi-content"><div class="kpi-label">รวม (ขวด)</div><div class="kpi-value">${active.reduce((s,r)=>s+(parseInt(r.qty)||0),0)}</div></div></div>
+    </div>
+    <div class="muted" style="font-size:11px;margin-top:8px;">💡 <strong>แก้ไขข้อมูลได้</strong>: คลิกในช่องเพื่อแก้ qty/price/วันที่ | กด ✕ เพื่อข้ามรายการ</div>`;
+
+  const rows = records.map((r,i) => `<tr class="${r.excluded?'excluded':''}" data-idx="${i}">
+    <td><input type="date" class="edit-inp xls-edit-date" data-idx="${i}" value="${r.date}" style="width:120px;"></td>
+    <td><input type="text" class="edit-inp xls-edit-barcode" data-idx="${i}" value="${r.barcode}" style="width:110px;font-family:monospace;font-size:9pt;"></td>
+    <td>${r.scent}</td>
+    <td>${r.size}</td>
+    <td class="num"><input type="number" class="edit-inp xls-edit-qty" data-idx="${i}" value="${r.qty}" min="0" style="width:60px;text-align:right;"></td>
+    <td class="num"><input type="number" class="edit-inp xls-edit-price" data-idx="${i}" value="${r.price}" step="0.01" style="width:80px;text-align:right;"></td>
+    <td class="num row-total" data-idx="${i}">${fmtMoney(r.value)}</td>
+    <td class="center"><button class="btn sm row-toggle" data-idx="${i}">${r.excluded?'↩':'✕'}</button></td>
+  </tr>`).join("");
+  $("#excel-preview-body").innerHTML = rows;
+
+  $$("#excel-preview-body .edit-inp").forEach(el => el.addEventListener("input", e => {
+    const idx = +e.target.dataset.idx;
+    const r = records[idx];
+    if(e.target.classList.contains("xls-edit-qty")){
+      r.qty = parseInt(e.target.value)||0;
+      r.value = r.qty * (parseFloat(r.price)||0);
+    } else if(e.target.classList.contains("xls-edit-price")){
+      r.price = parseFloat(e.target.value)||0;
+      r.value = (parseInt(r.qty)||0) * r.price;
+    } else if(e.target.classList.contains("xls-edit-date")){
+      r.date = e.target.value;
+    } else if(e.target.classList.contains("xls-edit-barcode")){
+      r.barcode = e.target.value.trim();
+      const p = PRODUCTS.find(x => x.barcode === r.barcode);
+      if(p){ r.scent = p.scent; r.size = p.size; renderExcelPreview(); return; }
+    }
+    const cell = document.querySelector(`#excel-preview-body .row-total[data-idx="${idx}"]`);
+    if(cell) cell.textContent = fmtMoney(r.value);
+    // Update header KPI
+    $("#excel-preview-summary .kpi-value").textContent =
+      `${records.filter(x=>!x.excluded).length}`;
+  }));
+
+  $$("#excel-preview-body .row-toggle").forEach(b => b.addEventListener("click", () => {
+    const idx = +b.dataset.idx;
+    records[idx].excluded = !records[idx].excluded;
+    renderExcelPreview();
+  }));
+}
+
 $("#btn-confirm-excel-import")?.addEventListener("click", ()=>{
   if(!_excelImportData) return;
+  // Filter out excluded
+  _excelImportData = _excelImportData.filter(r => !r.excluded && r.qty > 0);
+  if(_excelImportData.length === 0){ toast("ไม่มีรายการให้นำเข้า", true); return; }
   const branch = $("#import-target-branch").value || "01_KPC";
   const mode = $("#import-replace-mode").value || "append";
 
@@ -5376,12 +5427,35 @@ function showPdfPreview(data){
   const thaiPeriodFrom = data.from ? thaiDate(data.from) : "—";
   const thaiPeriodTo = data.to ? thaiDate(data.to) : "—";
 
+  const renderRows = () => data.rows.map((r, i) => `<tr class="${r.matched?'':'unmatched'} ${r.excluded?'excluded':''}" data-idx="${i}">
+    <td>${r.excluded ? '<span class="muted">' + r.article + '</span>' : r.article}</td>
+    <td>${r.matched ? `<strong>${r.scent}</strong> <span class="muted" style="font-size:9pt;">${r.size}</span>` :
+      `<input type="text" class="edit-inp edit-scent" data-idx="${i}" value="${r.scent||r.description}" placeholder="ชื่อสินค้า" style="width:160px;"> ⚠️`}</td>
+    <td>${r.matched ? r.barcode : `<input type="text" class="edit-inp edit-barcode" data-idx="${i}" value="${r.barcode}" placeholder="barcode" style="width:120px;font-family:monospace;font-size:9pt;">`}</td>
+    <td><span class="muted" style="font-size:9pt;">${r.docNo}</span></td>
+    <td class="num"><input type="number" class="edit-inp edit-cost" data-idx="${i}" value="${r.unitCost}" step="0.01" style="width:80px;text-align:right;"></td>
+    <td class="num"><input type="number" class="edit-inp edit-qty" data-idx="${i}" value="${r.qty}" step="1" min="0" style="width:60px;text-align:right;"></td>
+    <td class="num row-total" data-idx="${i}">${r.total.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+    <td class="center"><button class="btn sm row-toggle" data-idx="${i}" title="${r.excluded?'รวมกลับ':'ข้าม/ลบ'}">${r.excluded?'↩':'✕'}</button></td>
+  </tr>`).join("");
+
+  const activeRows = () => data.rows.filter(r => !r.excluded);
+  const calcTotals = () => {
+    const rows = activeRows();
+    const qty = rows.reduce((s,r)=>s+r.qty,0);
+    const exclVat = rows.reduce((s,r)=>s+r.total,0);
+    const vatPct = data.totals.vat && data.totals.exclVat ? (data.totals.vat/data.totals.exclVat) : 0.07;
+    const vat = exclVat * vatPct;
+    return { qty, exclVat, vat, total: exclVat + vat };
+  };
+
   const html = `
     <div class="kpc-match-stats">
       <strong>📊 สรุปการอ่าน PDF:</strong>
       จับคู่สินค้าได้ <span class="stat-good">${matched} รายการ</span>
-      ${unmatched>0 ? `• <span class="stat-bad">⚠️ ${unmatched} รายการ ไม่พบในฐานข้อมูลสินค้า</span>` : "• ✓ ครบทุกรายการ"}
+      ${unmatched>0 ? `• <span class="stat-bad">⚠️ ${unmatched} รายการ ไม่พบในฐานข้อมูล (แก้ barcode หรือชื่อด้านล่างเพื่อจับคู่)</span>` : "• ✓ ครบทุกรายการ"}
       • ช่วง <strong>${thaiPeriodFrom} – ${thaiPeriodTo}</strong>
+      <div style="margin-top:6px;font-size:11px;color:#69728a;">💡 <strong>แก้ไขข้อมูลได้</strong>: คลิกในช่อง qty/cost/barcode/ชื่อสินค้า เพื่อแก้ค่า | กด ✕ เพื่อข้ามรายการ</div>
     </div>
 
     <div class="kpc-report">
@@ -5390,7 +5464,7 @@ function showPdfPreview(data){
         <div class="c">KING POWER CORPORATION<br><span style="font-size:11pt;">SALES REPORT</span></div>
         <div class="r">Page 1/1</div>
       </div>
-      <div class="kpc-report-period">From ${data.from?.replace(/-/g,".")?.split(".").reverse().join(".") || "—"} To ${data.to?.replace(/-/g,".")?.split(".").reverse().join(".") || "—"}</div>
+      <div class="kpc-report-period">From ${data.from?.split("-").reverse().join(".") || "—"} To ${data.to?.split("-").reverse().join(".") || "—"}</div>
       <div class="kpc-report-meta">
         <div class="lbl">Billing No.:</div><div>${data.billing||"—"}</div>
         <div class="lbl">Vendor code:</div><div>${data.vendorCode||"—"} &nbsp;&nbsp; Name: ${data.vendorName||"—"}</div>
@@ -5404,34 +5478,83 @@ function showPdfPreview(data){
             <th>REFERENCE</th>
             <th>DOC. NO.</th>
             <th class="num">UNIT COST</th>
-            <th class="num">QUANTITY</th>
+            <th class="num">QTY</th>
             <th class="num">TOTAL COST</th>
+            <th class="center">×</th>
           </tr>
         </thead>
-        <tbody>
-          ${data.rows.map(r => `<tr class="${r.matched?'':'unmatched'}">
-            <td>${r.article}</td>
-            <td>${r.description}${r.matched?'':' ⚠️'}</td>
-            <td>${r.barcode}</td>
-            <td>${r.docNo}</td>
-            <td class="num">${r.unitCost.toFixed(2)}</td>
-            <td class="num">${r.qty.toFixed(3)}</td>
-            <td class="num">${r.total.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
-          </tr>`).join("")}
-        </tbody>
+        <tbody id="pdf-rows-body">${renderRows()}</tbody>
         <tfoot>
           <tr>
             <td colspan="5" style="text-align:right;">TOTAL BY VENDOR: ${data.vendorCode} ${data.vendorName}</td>
-            <td class="num">${data.totals.qty || data.rows.reduce((s,r)=>s+r.qty,0).toFixed(3)}</td>
-            <td class="num">${(data.totals.exclVat || data.rows.reduce((s,r)=>s+r.total,0)).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+            <td class="num" id="pdf-foot-qty">0</td>
+            <td class="num" id="pdf-foot-excl">0</td>
+            <td></td>
           </tr>
-          <tr><td colspan="6" style="text-align:right;border-top:none;">Exclude VAT 7%</td><td class="num" style="border-top:none;">${data.totals.vat.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>
-          <tr><td colspan="6" style="text-align:right;border-top:none;">Total by vendor + VAT:</td><td class="num" style="border-top:none;">${data.totals.total.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>
+          <tr><td colspan="6" style="text-align:right;border-top:none;">Exclude VAT 7%</td><td class="num" id="pdf-foot-vat" style="border-top:none;">0</td><td></td></tr>
+          <tr><td colspan="6" style="text-align:right;border-top:none;">Total by vendor + VAT:</td><td class="num" id="pdf-foot-total" style="border-top:none;font-size:11pt;">0</td><td></td></tr>
         </tfoot>
       </table>
     </div>
   `;
   $("#pdf-preview-content").innerHTML = html;
+
+  const updateFooter = () => {
+    const t = calcTotals();
+    $("#pdf-foot-qty").textContent = t.qty.toFixed(3);
+    $("#pdf-foot-excl").textContent = t.exclVat.toLocaleString("en-US",{minimumFractionDigits:2});
+    $("#pdf-foot-vat").textContent = t.vat.toLocaleString("en-US",{minimumFractionDigits:2});
+    $("#pdf-foot-total").textContent = t.total.toLocaleString("en-US",{minimumFractionDigits:2});
+  };
+
+  // Handlers for editing inputs
+  const onEdit = (e) => {
+    const tgt = e.target;
+    if(!tgt.classList.contains("edit-inp")) return;
+    const idx = +tgt.dataset.idx;
+    const r = data.rows[idx];
+    if(tgt.classList.contains("edit-qty")){
+      r.qty = parseFloat(tgt.value)||0;
+      r.total = r.qty * r.unitCost;
+    } else if(tgt.classList.contains("edit-cost")){
+      r.unitCost = parseFloat(tgt.value)||0;
+      r.total = r.qty * r.unitCost;
+    } else if(tgt.classList.contains("edit-barcode")){
+      r.barcode = tgt.value.trim();
+      // Re-match
+      const p = PRODUCTS.find(x => x.barcode === r.barcode);
+      if(p){
+        r.product = p; r.matched = true;
+        r.scent = p.scent; r.size = p.size;
+        // Re-render to remove inputs
+        $("#pdf-rows-body").innerHTML = renderRows();
+        attachHandlers();
+        updateFooter();
+        return;
+      }
+    } else if(tgt.classList.contains("edit-scent")){
+      r.scent = tgt.value;
+    }
+    // Update row total cell
+    const cell = document.querySelector(`.row-total[data-idx="${idx}"]`);
+    if(cell) cell.textContent = r.total.toLocaleString("en-US",{minimumFractionDigits:2});
+    updateFooter();
+  };
+  const onToggle = (e) => {
+    const btn = e.target.closest(".row-toggle");
+    if(!btn) return;
+    const idx = +btn.dataset.idx;
+    data.rows[idx].excluded = !data.rows[idx].excluded;
+    $("#pdf-rows-body").innerHTML = renderRows();
+    attachHandlers();
+    updateFooter();
+  };
+  function attachHandlers(){
+    $$("#pdf-rows-body .edit-inp").forEach(el => el.addEventListener("input", onEdit));
+    $$("#pdf-rows-body .row-toggle").forEach(el => el.addEventListener("click", onToggle));
+  }
+  attachHandlers();
+  updateFooter();
 
   // Populate target branch and other selectors
   const tb = $("#pdf-import-target-branch");
@@ -5473,8 +5596,9 @@ $("#btn-confirm-pdf-import")?.addEventListener("click", ()=>{
   const recordIds = [];
   let added = 0;
   let totalQty = 0, totalValue = 0;
-  _pdfImportData.rows.forEach(r => {
-    if(!r.barcode) return;
+  const rowsToImport = _pdfImportData.rows.filter(r => !r.excluded && r.barcode && r.qty > 0);
+  if(rowsToImport.length === 0){ toast("ไม่มีรายการให้นำเข้า", true); return; }
+  rowsToImport.forEach(r => {
     const id = "sale_pdf_" + batchId + "_" + (added++);
     recordIds.push(id);
     totalQty += r.qty; totalValue += r.total;
