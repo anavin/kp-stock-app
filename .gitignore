@@ -1,0 +1,32 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backups
+*.bak
+*.backup
+*~
+*.tmp
+
+# Logs
+*.log
+
+# Environment / secrets (ห้าม commit)
+.env
+.env.local
+.env.*.local
+secrets/
+config.local.js
+
+# Node (เผื่ออนาคต)
+node_modules/
+package-lock.json
+yarn.lock
