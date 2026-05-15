@@ -497,6 +497,31 @@ body[data-role="staff"] .manager-only { display:none !important; }
 
 <!-- =================== SALES SUMMARY =================== -->
 <section class="page" id="page-sales">
+  <div class="card">
+    <h2>🗓 ช่วงเวลาที่ต้องการดู</h2>
+    <div class="toolbar">
+      <select id="sales-period" class="search-input">
+        <option value="all">ทั้งหมด (ตลอดเวลา)</option>
+        <option value="today">วันนี้</option>
+        <option value="7d">7 วันล่าสุด</option>
+        <option value="30d">30 วันล่าสุด</option>
+        <option value="thismonth">เดือนนี้</option>
+        <option value="lastmonth">เดือนที่แล้ว</option>
+        <option value="3m">3 เดือนล่าสุด</option>
+        <option value="6m">6 เดือนล่าสุด</option>
+        <option value="thisyear">ปีนี้</option>
+        <option value="lastyear">ปีที่แล้ว</option>
+        <option value="custom">กำหนดเอง...</option>
+      </select>
+      <input class="search-input" id="sales-from" type="date" title="วันที่เริ่ม">
+      <span class="muted">ถึง</span>
+      <input class="search-input" id="sales-to" type="date" title="วันที่สิ้นสุด">
+      <select id="sales-period-branch" class="search-input"><option value="">ทุกสาขา</option></select>
+      <div style="flex:1;"></div>
+      <span class="muted" id="sales-period-info" style="font-size:11px;"></span>
+    </div>
+  </div>
+
   <div class="stats-grid">
     <div class="stat success"><div class="label">ยอดขายรวม (ขวด)</div><div class="value" id="sales-kpi-units">0</div><div class="delta" id="sales-kpi-units-sub">ทุกสาขา • ตลอดเวลา</div></div>
     <div class="stat"><div class="label">มูลค่าขายรวม</div><div class="value" id="sales-kpi-value">฿0</div><div class="delta" id="sales-kpi-value-sub">ราคาขายปลีก</div></div>
@@ -541,7 +566,7 @@ body[data-role="staff"] .manager-only { display:none !important; }
       <canvas id="chart-sales-branch" height="170"></canvas>
     </div>
     <div class="card">
-      <h2>ยอดขายรายวัน (30 วันล่าสุด)</h2>
+      <h2>ยอดขายตามช่วงเวลา <span id="sales-trend-mode" class="muted" style="font-size:11px;font-weight:400;"></span></h2>
       <canvas id="chart-sales-trend" height="170"></canvas>
     </div>
   </div>
@@ -1663,13 +1688,54 @@ function downloadCSV(rows, filename){
 
 // ------- SALES SUMMARY -------
 let chartSalesBranch, chartSalesTrend, chartSalesTop, chartSalesSize;
-const salesState = { branch:"01_KPC", date:todayStr(), barcode:"", qty:1, prodFilter:"", prodBranch:"", prodSort:"qty-desc", logBranch:"", logFrom:"", logTo:"", logSearch:"" };
+const salesState = {
+  branch:"01_KPC", date:todayStr(), barcode:"", qty:1,
+  prodFilter:"", prodBranch:"", prodSort:"qty-desc",
+  logBranch:"", logFrom:"", logTo:"", logSearch:"",
+  // Period filter
+  period: "all", periodFrom: "", periodTo: "", periodBranch: ""
+};
+
+// Compute date range for selected period
+function computePeriodRange(period){
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth(), d = today.getDate();
+  const fmt = (date) => date.toISOString().slice(0,10);
+  let from, to = fmt(today);
+  switch(period){
+    case "today": from = fmt(today); break;
+    case "7d": { const f=new Date(today); f.setDate(f.getDate()-6); from=fmt(f); break; }
+    case "30d": { const f=new Date(today); f.setDate(f.getDate()-29); from=fmt(f); break; }
+    case "thismonth": from = fmt(new Date(y, m, 1)); break;
+    case "lastmonth": from = fmt(new Date(y, m-1, 1)); to = fmt(new Date(y, m, 0)); break;
+    case "3m": { const f=new Date(today); f.setMonth(f.getMonth()-2); from=fmt(new Date(f.getFullYear(),f.getMonth(),1)); break; }
+    case "6m": { const f=new Date(today); f.setMonth(f.getMonth()-5); from=fmt(new Date(f.getFullYear(),f.getMonth(),1)); break; }
+    case "thisyear": from = `${y}-01-01`; break;
+    case "lastyear": from = `${y-1}-01-01`; to = `${y-1}-12-31`; break;
+    case "custom": from = salesState.periodFrom || ""; to = salesState.periodTo || to; break;
+    case "all":
+    default: from = ""; to = "";
+  }
+  return { from, to };
+}
+
+// Filter salesRecords by current period
+function filteredSales(){
+  const { from, to } = computePeriodRange(salesState.period);
+  const br = salesState.periodBranch;
+  return state.salesRecords.filter(r => {
+    if(br && r.branchCode !== br) return false;
+    if(from && r.date < from) return false;
+    if(to && r.date > to) return false;
+    return true;
+  });
+}
 
 function salesAgg(){
-  // Aggregate from salesRecords
+  // Aggregate from filtered salesRecords
   let totalQty=0, totalValue=0;
   const byBranch={}, byProd={}, bySize={};
-  state.salesRecords.forEach(r => {
+  filteredSales().forEach(r => {
     totalQty += r.qty;
     totalValue += r.value;
     byBranch[r.branchCode] = (byBranch[r.branchCode]||0) + r.qty;
@@ -1702,13 +1768,29 @@ function renderSales(){
   const lbList = $("#sales-log-branch");
   if(lbList.options.length<=1) lbList.innerHTML = '<option value="">ทุกสาขา</option>' + BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
 
+  // Period filter UI
+  const pbSel = $("#sales-period-branch");
+  if(pbSel.options.length<=1) pbSel.innerHTML = '<option value="">ทุกสาขา</option>' + BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  $("#sales-period").value = salesState.period;
+  pbSel.value = salesState.periodBranch;
+  const range = computePeriodRange(salesState.period);
+  $("#sales-from").value = salesState.period==="custom" ? salesState.periodFrom : range.from;
+  $("#sales-to").value = salesState.period==="custom" ? salesState.periodTo : range.to;
+  $("#sales-from").disabled = salesState.period !== "custom";
+  $("#sales-to").disabled = salesState.period !== "custom";
+
+  // Period info text
+  const filtered = filteredSales();
+  const periodLabel = ({all:"ตลอดเวลา",today:"วันนี้","7d":"7 วันล่าสุด","30d":"30 วันล่าสุด",thismonth:"เดือนนี้",lastmonth:"เดือนที่แล้ว","3m":"3 เดือนล่าสุด","6m":"6 เดือนล่าสุด",thisyear:"ปีนี้",lastyear:"ปีที่แล้ว",custom:"กำหนดเอง"})[salesState.period] || salesState.period;
+  $("#sales-period-info").innerHTML = `📅 <strong>${periodLabel}</strong>${range.from?` • ${thaiDate(range.from)} ~ ${thaiDate(range.to)}`:""} • <strong>${filtered.length}</strong> รายการ`;
+
   updateSalePreview();
 
   // KPIs
   const agg = salesAgg();
   $("#sales-kpi-units").textContent = fmtInt(agg.totalQty);
   $("#sales-kpi-value").textContent = fmtMoney(agg.totalValue);
-  $("#sales-kpi-units-sub").textContent = state.salesRecords.length>0 ? `${state.salesRecords.length} รายการ` : "ยังไม่มีข้อมูล";
+  $("#sales-kpi-units-sub").textContent = filtered.length>0 ? `${filtered.length} รายการ • ${periodLabel}` : "ไม่มีข้อมูลในช่วงนี้";
 
   const topEntry = Object.entries(agg.byProd).sort((a,b)=>b[1].qty-a[1].qty)[0];
   if(topEntry){
@@ -1722,11 +1804,11 @@ function renderSales(){
     $("#sales-kpi-branch-sub").textContent = `${topBranchEntry[1]} ขวด`;
   } else { $("#sales-kpi-branch").textContent = "—"; $("#sales-kpi-branch-sub").textContent = "ยังไม่มีข้อมูล"; }
 
-  // Chart: by branch (qty + value)
+  // Chart: by branch (qty + value) — use filtered data
   const branchLabels = BRANCHES.map(b=>b.code);
   const branchQty = BRANCHES.map(b => agg.byBranch[b.code]||0);
   const branchValue = BRANCHES.map(b => {
-    let v=0; state.salesRecords.forEach(r=>{ if(r.branchCode===b.code) v+=r.value; }); return v;
+    let v=0; filtered.forEach(r=>{ if(r.branchCode===b.code) v+=r.value; }); return v;
   });
   if(chartSalesBranch) chartSalesBranch.destroy();
   chartSalesBranch = new Chart($("#chart-sales-branch"), {
@@ -1744,16 +1826,44 @@ function renderSales(){
     }
   });
 
-  // Chart: 30-day trend
-  const now = new Date(); const days=30; const labels=[]; const dataQty=[]; const dataValue=[];
-  for(let i=days-1;i>=0;i--){
-    const d = new Date(now); d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    labels.push(d.toLocaleDateString("th-TH",{day:"2-digit",month:"2-digit"}));
-    let q=0, v=0;
-    state.salesRecords.forEach(r => { if(r.date===key){ q+=r.qty; v+=r.value; } });
-    dataQty.push(q); dataValue.push(v);
+  // Chart: trend — adapts to selected period (daily for short, monthly for long ranges)
+  const labels=[]; const dataQty=[]; const dataValue=[];
+  let fromD, toD;
+  if(range.from && range.to){
+    fromD = new Date(range.from); toD = new Date(range.to);
+  } else {
+    // "all" — use first sales record date to today
+    const dates = filtered.map(r=>r.date).sort();
+    fromD = dates.length ? new Date(dates[0]) : new Date(Date.now()-30*86400000);
+    toD = new Date();
   }
+  const totalDays = Math.ceil((toD - fromD)/86400000) + 1;
+  const useMonthly = totalDays > 60; // if more than 60 days, group by month
+  if(useMonthly){
+    // Group by year-month
+    const months = {};
+    filtered.forEach(r => {
+      const ym = r.date.slice(0,7);
+      months[ym] = months[ym] || { q:0, v:0 };
+      months[ym].q += r.qty;
+      months[ym].v += r.value;
+    });
+    const keys = Object.keys(months).sort();
+    keys.forEach(k => {
+      labels.push(k);
+      dataQty.push(months[k].q);
+      dataValue.push(months[k].v);
+    });
+  } else {
+    for(let d=new Date(fromD); d<=toD; d.setDate(d.getDate()+1)){
+      const key = d.toISOString().slice(0,10);
+      labels.push(d.toLocaleDateString("th-TH",{day:"2-digit",month:"2-digit"}));
+      let q=0, v=0;
+      filtered.forEach(r => { if(r.date===key){ q+=r.qty; v+=r.value; } });
+      dataQty.push(q); dataValue.push(v);
+    }
+  }
+  $("#sales-trend-mode").textContent = useMonthly ? "• แสดงรายเดือน" : "• แสดงรายวัน";
   if(chartSalesTrend) chartSalesTrend.destroy();
   chartSalesTrend = new Chart($("#chart-sales-trend"), {
     type:"line",
@@ -1813,6 +1923,17 @@ document.addEventListener("change", e=>{
   if(e.target.id==="sales-log-branch"){ salesState.logBranch=e.target.value; renderSalesLog(); }
   if(e.target.id==="sales-log-from"){ salesState.logFrom=e.target.value; renderSalesLog(); }
   if(e.target.id==="sales-log-to"){ salesState.logTo=e.target.value; renderSalesLog(); }
+  // Global period filter
+  if(e.target.id==="sales-period"){ salesState.period=e.target.value; renderSales(); }
+  if(e.target.id==="sales-period-branch"){ salesState.periodBranch=e.target.value; renderSales(); }
+  if(e.target.id==="sales-from"){
+    if(salesState.period!=="custom"){ salesState.period="custom"; }
+    salesState.periodFrom=e.target.value; renderSales();
+  }
+  if(e.target.id==="sales-to"){
+    if(salesState.period!=="custom"){ salesState.period="custom"; }
+    salesState.periodTo=e.target.value; renderSales();
+  }
 });
 document.addEventListener("input", e=>{
   if(e.target.id==="sale-qty"){ salesState.qty=Math.max(1,parseInt(e.target.value)||1); updateSalePreview(); }
@@ -1851,10 +1972,10 @@ $("#btn-record-sale")?.addEventListener("click", ()=>{
 function renderSalesProdTable(){
   const agg = salesAgg();
   const branch = salesState.prodBranch;
-  // If branch filter selected, recompute per-product totals only for that branch
+  // Use period-filtered records as base, then optionally further filter by branch
   let perProd = {};
   if(branch){
-    state.salesRecords.filter(r=>r.branchCode===branch).forEach(r=>{
+    filteredSales().filter(r=>r.branchCode===branch).forEach(r=>{
       perProd[r.barcode] = perProd[r.barcode] || { qty:0, value:0, scent:r.scent, size:r.size, goods_code:r.goods_code, price:r.price };
       perProd[r.barcode].qty += r.qty;
       perProd[r.barcode].value += r.value;
