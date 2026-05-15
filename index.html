@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1e6dd8">
+<!-- Content Security Policy — จำกัด script source เพื่อลด XSS risk -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self' 'unsafe-inline';
+  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com blob:;
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: blob:;
+  font-src 'self' data:;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.supabase.io;
+  worker-src 'self' blob: https://cdnjs.cloudflare.com;
+  frame-src 'none';
+  object-src 'none';
+  base-uri 'self';
+">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lab Parfumo">
@@ -54,6 +67,7 @@ nav.tabs button.active { background:#0f2c5a; color:#fff; }
 .link-btn:hover { color:#0a4cb0;}
 .field input, .field select, .field textarea {
   border:1px solid #d4d8e3; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; background:#fff;
+  width:100%; box-sizing:border-box;
 }
 .field input:focus, .field select:focus, .field textarea:focus { outline:2px solid #1e6dd8; outline-offset:-1px; border-color:#1e6dd8;}
 .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:1px solid #d4d8e3; background:#fff; font-size:13px; cursor:pointer; font-family:inherit; color:#0f2c5a; font-weight:500;}
@@ -521,6 +535,15 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
 }
 .undo-toast .btn { background:#fff; color:#0f2c5a; padding:5px 12px;}
 
+/* Session timeout warning bar */
+.session-warn-bar {
+  position:fixed; top:14px; left:50%; transform:translateX(-50%);
+  background:#fdf3e0; border:1px solid #f4d8a3; color:#8a5e10;
+  padding:8px 14px; border-radius:10px; font-size:12.5px;
+  display:flex; align-items:center; gap:10px; box-shadow:0 8px 20px rgba(168,115,26,.2);
+  z-index:9800; max-width:90%;
+}
+
 /* ==== Onboarding Overlay ==== */
 .onboarding-overlay {
   position:fixed; inset:0; z-index:9500;
@@ -909,6 +932,14 @@ body[data-role="staff"] .manager-only { display:none !important; }
 .login-card .alt-action { text-align:center; margin-top:14px; font-size:12px; color:#69728a;}
 .login-card .alt-action a { color:#1e6dd8; cursor:pointer; font-weight:600; text-decoration:underline;}
 .login-card .err-msg { color:#c4392f; font-size:12px; margin-top:6px; min-height:14px;}
+.pw-strength { margin-top:6px;}
+.pw-bar { height:6px; background:#eef0f5; border-radius:3px; overflow:hidden;}
+.pw-bar-fill { height:100%; width:0; transition:width .3s, background .3s; border-radius:3px;}
+.pw-bar-fill.weak { width:33%; background:#c4392f;}
+.pw-bar-fill.medium { width:66%; background:#a8731a;}
+.pw-bar-fill.strong { width:100%; background:#1e8a4e;}
+.pw-hint { font-size:11px; color:#69728a; margin-top:4px;}
+.pw-hint.weak { color:#c4392f;} .pw-hint.medium { color:#a8731a;} .pw-hint.strong { color:#1e8a4e;}
 
 @media print {
   body { background:#fff !important; padding:0; }
@@ -2156,17 +2187,24 @@ body[data-role="staff"] .manager-only { display:none !important; }
       <div class="field">
         <label>บทบาท (Role)</label>
         <select id="signup-role">
-          <option value="staff">Staff — พนักงานสาขา</option>
-          <option value="manager">Manager — ผู้จัดการ</option>
-          <option value="admin">Admin — เจ้าของ/ผู้ดูแลระบบ</option>
+          <option value="staff">Staff — พนักงานสาขา (อ่านอย่างเดียว)</option>
+          <option value="manager">Manager — ผู้จัดการ (แก้ไขข้อมูลได้)</option>
+          <option value="admin">Admin — ผู้ดูแลระบบ (จัดการเต็มสิทธิ์)</option>
         </select>
       </div>
       <div class="field" id="signup-branch-field">
         <label>สาขาที่ดูแล (สำหรับ Staff)</label>
         <select id="signup-branch"></select>
       </div>
+      <div class="pw-strength" id="pw-strength" style="display:none;">
+        <div class="pw-bar"><div class="pw-bar-fill" id="pw-bar-fill"></div></div>
+        <div class="pw-hint" id="pw-hint">ใช้รหัสผ่านขั้นต่ำ 8 ตัวอักษร + ตัวเลข + ตัวอักษร</div>
+      </div>
     </div>
     <div class="err-msg" id="login-err"></div>
+    <div style="text-align:right;font-size:11px;margin-bottom:8px;">
+      <a id="forgot-password" style="color:#1e6dd8;cursor:pointer;text-decoration:underline;">ลืมรหัสผ่าน?</a>
+    </div>
     <div class="actions">
       <button class="btn primary" id="btn-login">เข้าสู่ระบบ</button>
       <button class="btn" id="btn-signup">สมัครใหม่</button>
@@ -2812,6 +2850,8 @@ function renderNewSlip(){
   $("#new-po").value = newSlipState.po || nextPONumber();
   $("#new-dn").value = newSlipState.dn || nextDeliveryNumber();
   renderNewItems();
+  // Re-apply role to reset disabled state in case role changed
+  if(typeof applyRole === "function") applyRole();
 }
 
 function renderNewItems(){
@@ -2832,7 +2872,7 @@ function renderNewItems(){
     return `<tr>
       <td><span class="muted">${p.goods_code||"-"}</span></td>
       <td><span class="muted">${p.barcode}</span></td>
-      <td>${p.scent}${p.is_tryme?' <span class="pill gray">TRY ME</span>':''}</td>
+      <td>${esc(p.scent)}${p.is_tryme?' <span class="pill gray">TRY ME</span>':''}</td>
       <td>${p.size}</td>
       <td class="num">${p.price>0?fmtMoney(p.price):'-'}</td>
       <td class="center">${stockBadge}</td>
@@ -3018,7 +3058,7 @@ function showPreview(slip, isSaved){
         </tbody>
       </table>
 
-      ${slip.note ? `<div class="xl-notes"><span class="l">หมายเหตุ :</span> ${slip.note}</div>` : ""}
+      ${slip.note ? `<div class="xl-notes"><span class="l">หมายเหตุ :</span> ${esc(slip.note)}</div>` : ""}
 
       <div class="xl-signers">
         <div class="col">
@@ -3209,7 +3249,7 @@ function renderStock(){
     return `<tr>
       <td><span class="muted">${p.goods_code||"-"}</span></td>
       <td><span class="muted">${p.barcode}</span></td>
-      <td>${p.scent}${p.is_tryme?' <span class="pill gray">TRY ME</span>':''}</td>
+      <td>${esc(p.scent)}${p.is_tryme?' <span class="pill gray">TRY ME</span>':''}</td>
       <td>${p.size}</td>
       <td class="num">${p.price>0?fmtMoney(p.price):'-'}</td>
       <td class="center">${received}</td>
@@ -3655,7 +3695,7 @@ function renderSalesLog(){
     <td class="center"><strong>${r.qty}</strong></td>
     <td class="num">${fmtMoney(r.price)}</td>
     <td class="num">${fmtMoney(r.value)}</td>
-    <td><span class="muted">${r.note||"-"}</span></td>
+    <td><span class="muted">${esc(r.note||"-")}</span></td>
     <td class="center"><button class="btn sm danger sale-del" data-id="${r.id}">ลบ</button></td>
   </tr>`).join("");
 
@@ -4110,12 +4150,16 @@ let currentRoleBranch = localStorage.getItem(ROLE_BRANCH_KEY) || "";
 
 function applyRole(){
   document.body.dataset.role = currentRole;
-  // Restrict branch selectors for staff
-  if(currentRole==="staff" && currentRoleBranch){
-    $$("select#new-branch, select#sale-branch, select#stock-branch").forEach(s=>{
-      if(s){ s.value = currentRoleBranch; s.disabled = true; }
-    });
-  }
+  // Restrict branch selectors for staff (and re-enable for admin/manager)
+  $$("select#new-branch, select#sale-branch, select#stock-branch").forEach(s=>{
+    if(!s) return;
+    if(currentRole==="staff" && currentRoleBranch){
+      s.value = currentRoleBranch;
+      s.disabled = true;
+    } else {
+      s.disabled = false;
+    }
+  });
   // Hide tabs for non-admin
   $$("nav.tabs button.admin-only").forEach(b => b.style.display = currentRole==="admin" ? "" : "none");
 }
@@ -4219,7 +4263,7 @@ function renderMasterProducts(){
   $("#md-prod-body").innerHTML = rows.map((p,i)=>`<tr>
     <td><span class="muted">${p.goods_code||"-"}</span></td>
     <td><span class="muted">${p.barcode}</span></td>
-    <td>${p.scent}</td>
+    <td>${esc(p.scent)}</td>
     <td>${p.size}</td>
     <td class="num">${fmtMoney(p.price||0)}</td>
     <td class="center">${p.is_tryme ? '<span class="pill gray">YES</span>' : ''}</td>
@@ -4237,7 +4281,7 @@ function renderMasterBranches(){
   const rows = BRANCHES.filter(b => !q || b.code.toLowerCase().includes(q) || b.name.toLowerCase().includes(q));
   $("#md-br-body").innerHTML = rows.map(b=>`<tr style="${b.hidden?'opacity:.55;background:#fafbfd;':''}">
     <td><span class="muted">${b.code}</span></td>
-    <td>${b.name} ${b.hidden?'<span class="pill gray" style="margin-left:6px;">ซ่อน</span>':''}</td>
+    <td>${esc(b.name)} ${b.hidden?'<span class="pill gray" style="margin-left:6px;">ซ่อน</span>':''}</td>
     <td>${b.tel||"-"}</td>
     <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.addr||''}">${b.addr||"-"}</td>
     <td class="center">
@@ -4816,6 +4860,168 @@ loadMasterOverride();
 applyRole();
 
 // =====================================================
+// SECURITY: XSS Protection — escapeHtml helper
+// =====================================================
+function escapeHtml(str){
+  if(str == null) return "";
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+// Make available globally for template strings
+window.esc = escapeHtml;
+
+// =====================================================
+// SECURITY: Session Timeout (30 min idle, warn at 25 min)
+// =====================================================
+const SESSION_IDLE_LIMIT = 30 * 60 * 1000; // 30 minutes
+const SESSION_WARN_AT = 25 * 60 * 1000;    // 25 minutes
+let lastActivity = Date.now();
+let sessionWarnTimer = null;
+let sessionLogoutTimer = null;
+let sessionWarned = false;
+
+function resetSessionTimer(){
+  lastActivity = Date.now();
+  sessionWarned = false;
+  clearTimeout(sessionWarnTimer);
+  clearTimeout(sessionLogoutTimer);
+  // Hide warning if showing
+  const warn = $("#session-warn");
+  if(warn) warn.style.display = "none";
+  if(!supaUser) return; // only enforce when logged in
+  sessionWarnTimer = setTimeout(()=>{
+    if(supaUser) showSessionWarning();
+  }, SESSION_WARN_AT);
+  sessionLogoutTimer = setTimeout(()=>{
+    if(supaUser) forceLogout();
+  }, SESSION_IDLE_LIMIT);
+}
+
+function showSessionWarning(){
+  sessionWarned = true;
+  let warn = $("#session-warn");
+  if(!warn){
+    warn = document.createElement("div");
+    warn.id = "session-warn";
+    warn.className = "session-warn-bar";
+    warn.innerHTML = `
+      <span>⏰ คุณไม่ได้ใช้งานมานานแล้ว — ระบบจะ logout ใน 5 นาที</span>
+      <button class="btn sm primary" onclick="resetSessionTimer()">อยู่ต่อ</button>
+    `;
+    document.body.appendChild(warn);
+  }
+  warn.style.display = "flex";
+}
+
+async function forceLogout(){
+  if(!supaUser) return;
+  toast("⏰ Session หมดอายุ — กรุณา login ใหม่", true);
+  if(supaClient){ await supaClient.auth.signOut(); }
+  supaUser = null;
+  setSyncStatus("offline", "Session หมดอายุ", "");
+  showLogin();
+  resetSessionTimer();
+}
+
+// Listen for any user activity to reset timer
+["click","keydown","mousemove","scroll","touchstart"].forEach(ev =>
+  document.addEventListener(ev, () => {
+    if(supaUser && (Date.now() - lastActivity > 30000)) resetSessionTimer();
+    else lastActivity = Date.now();
+  }, { passive: true })
+);
+
+// =====================================================
+// SECURITY: Password Strength Validator
+// =====================================================
+function checkPasswordStrength(pwd){
+  if(!pwd || pwd.length < 6) return { score:0, level:"weak", msg:"ใช้รหัสผ่านขั้นต่ำ 8 ตัวอักษร + ตัวเลข + ตัวอักษร" };
+  let score = 0;
+  if(pwd.length >= 8) score++;
+  if(pwd.length >= 12) score++;
+  if(/[a-z]/.test(pwd)) score++;
+  if(/[A-Z]/.test(pwd)) score++;
+  if(/\d/.test(pwd)) score++;
+  if(/[^a-zA-Z0-9]/.test(pwd)) score++;
+  if(score <= 2) return { score, level:"weak", msg:"⚠️ รหัสอ่อน — ควรมีตัวเลข + ตัวอักษร อย่างน้อย 8 ตัว" };
+  if(score <= 4) return { score, level:"medium", msg:"✓ ปานกลาง — แนะนำเพิ่มอักขระพิเศษให้ปลอดภัยขึ้น" };
+  return { score, level:"strong", msg:"✓✓ รหัสผ่านปลอดภัย" };
+}
+
+// Hook into password input
+document.addEventListener("input", e => {
+  if(e.target.id !== "login-password") return;
+  const extras = $("#signup-extras");
+  // Only show strength when in signup mode
+  if(extras && extras.style.display === "block"){
+    const strength = $("#pw-strength");
+    const fill = $("#pw-bar-fill");
+    const hint = $("#pw-hint");
+    strength.style.display = "block";
+    const r = checkPasswordStrength(e.target.value);
+    fill.className = "pw-bar-fill " + r.level;
+    hint.className = "pw-hint " + r.level;
+    hint.textContent = r.msg;
+  }
+});
+
+// Override signup to validate password strength
+async function validateSignupPassword(pwd){
+  const r = checkPasswordStrength(pwd);
+  if(pwd.length < 8){
+    return { ok:false, msg:"รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร" };
+  }
+  if(!/[a-zA-Z]/.test(pwd) || !/\d/.test(pwd)){
+    return { ok:false, msg:"รหัสผ่านต้องมีทั้งตัวเลขและตัวอักษร" };
+  }
+  return { ok:true };
+}
+
+// Wrap signup handler to add validation
+(function patchSignup(){
+  const btn = document.getElementById("btn-signup");
+  if(!btn) return;
+  // Use capture to intercept before existing handler
+  btn.addEventListener("click", async (e) => {
+    const pwd = $("#login-password").value;
+    const extras = $("#signup-extras");
+    if(extras && extras.style.display === "block"){
+      const v = await validateSignupPassword(pwd);
+      if(!v.ok){
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        $("#login-err").textContent = v.msg;
+      }
+    }
+  }, true);
+})();
+
+// =====================================================
+// SECURITY: Forgot Password
+// =====================================================
+$("#forgot-password")?.addEventListener("click", async ()=>{
+  const email = $("#login-email").value.trim();
+  if(!email){ $("#login-err").textContent = "กรุณากรอก Email ก่อน แล้วกดลืมรหัสผ่าน"; return; }
+  if(!supaClient){ $("#login-err").textContent = "กรุณาตั้งค่า Supabase URL + Key ก่อน"; return; }
+  const ok = await customConfirm(`ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ <strong>${esc(email)}</strong>?`, "ลืมรหัสผ่าน");
+  if(!ok) return;
+  try{
+    const { error } = await supaClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    if(error) throw error;
+    $("#login-err").style.color = "#1e8a4e";
+    $("#login-err").textContent = `✅ ส่งลิงก์รีเซ็ตไปที่ ${email} แล้ว — ตรวจ inbox ของคุณ`;
+  }catch(e){
+    $("#login-err").textContent = "ส่งล้มเหลว: " + e.message;
+  }
+});
+
+// =====================================================
 // CUSTOM CONFIRM MODAL (replaces browser confirm)
 // =====================================================
 let _confirmResolve = null;
@@ -4884,9 +5090,9 @@ function renderAuditLog(){
   }
   body.innerHTML = entries.map(e => `<tr>
     <td><span class="muted" style="font-size:11px;">${new Date(e.time).toLocaleString("th-TH")}</span></td>
-    <td><strong>${e.user}</strong></td>
-    <td><span class="pill blue">${e.action}</span></td>
-    <td>${e.detail}</td>
+    <td><strong>${esc(e.user)}</strong></td>
+    <td><span class="pill blue">${esc(e.action)}</span></td>
+    <td>${esc(e.detail)}</td>
   </tr>`).join("");
 }
 
@@ -5776,7 +5982,7 @@ function renderReturns(){
       <td>${r.scent} <span class="muted">• ${r.size}</span></td>
       <td class="num"><strong>${r.qty}</strong></td>
       <td><span class="reason-chip reason-${r.reason}">${reasonLabels[r.reason]||r.reason}</span></td>
-      <td><span class="muted">${r.note||"-"}</span></td>
+      <td><span class="muted">${esc(r.note||"-")}</span></td>
       <td class="center"><button class="btn sm danger ret-del" data-id="${r.id}">ลบ</button></td>
     </tr>`).join("");
     $$(".ret-del").forEach(b => b.addEventListener("click", async ()=>{
