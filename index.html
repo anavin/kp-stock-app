@@ -970,6 +970,7 @@ body[data-role="staff"] .manager-only { display:none !important; }
     <button data-tab="reconcile">⚖️ Reconcile</button>
     <button data-tab="returns">↩️ คืน/ชำรุด</button>
     <button data-tab="master" class="admin-only">⚙️ จัดการข้อมูล</button>
+    <button data-tab="users" class="admin-only">👥 ผู้ใช้</button>
     <button data-tab="settings">ตั้งค่า</button>
   </nav>
   <div id="sync-status" class="sync-status" title="คลิกเพื่อ Sync">
@@ -1855,6 +1856,79 @@ body[data-role="staff"] .manager-only { display:none !important; }
   </div>
 </section>
 
+<!-- =================== USERS MANAGEMENT =================== -->
+<section class="page" id="page-users">
+  <div class="report-hero">
+    <div class="report-hero-content">
+      <div class="report-hero-icon">👥</div>
+      <div>
+        <h1 class="report-hero-title">จัดการผู้ใช้ระบบ</h1>
+        <div class="report-hero-sub">เพิ่ม/แก้/ลบ users + ตั้ง role และสาขา • เฉพาะ Admin</div>
+      </div>
+    </div>
+    <div class="report-hero-actions">
+      <button class="btn sm" id="btn-refresh-users">🔄 รีเฟรช</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>+ เพิ่ม User ใหม่</h2>
+    <p class="muted" style="margin-bottom:10px;font-size:12px;">
+      ระบุข้อมูล user ใหม่ — ระบบจะสร้างบัญชีและตั้ง role ให้อัตโนมัติ
+    </p>
+    <div class="form-row">
+      <div class="field"><label>Email</label><input type="email" id="newuser-email" placeholder="user@labparfumo.com"></div>
+      <div class="field"><label>Password (อย่างน้อย 8 ตัว + ตัวเลข)</label><input type="text" id="newuser-pwd" placeholder="ตั้ง temporary password"></div>
+      <div class="field">
+        <label>Role</label>
+        <select id="newuser-role">
+          <option value="staff">Staff — พนักงาน (อ่านอย่างเดียว)</option>
+          <option value="manager">Manager — ผู้จัดการ (แก้ได้)</option>
+          <option value="admin">Admin — เต็มสิทธิ์</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>สาขา (สำหรับ Staff)</label>
+        <select id="newuser-branch"></select>
+      </div>
+    </div>
+    <div class="flex-row">
+      <div class="muted" id="newuser-info" style="font-size:11px;">💡 หลังสร้าง — แจ้ง email + password ให้ user แล้วบอกให้เปลี่ยน password ครั้งแรกที่ใช้</div>
+      <div style="flex:1;"></div>
+      <button class="btn primary" id="btn-add-user">+ สร้าง User</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 รายชื่อ User ในระบบ</h2>
+    <div class="toolbar">
+      <input class="search-input grow" id="users-search" placeholder="ค้นหา email…">
+      <select id="users-filter-role" class="search-input">
+        <option value="">ทุก Role</option>
+        <option value="admin">Admin</option>
+        <option value="manager">Manager</option>
+        <option value="staff">Staff</option>
+      </select>
+    </div>
+    <div class="table-wrap" style="max-height:520px;">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>สาขา</th>
+            <th>สมัครเมื่อ</th>
+            <th>Login ล่าสุด</th>
+            <th class="center">สถานะ</th>
+            <th class="center">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- =================== SETTINGS =================== -->
 <section class="page" id="page-settings">
   <div class="card">
@@ -2382,6 +2456,7 @@ $$("#tabs button").forEach(b => {
     if(tab==="reconcile") renderReconcile();
     if(tab==="returns") renderReturns();
     if(tab==="master") renderMaster();
+    if(tab==="users") renderUsers();
     if(tab==="settings") renderSettings();
   });
 });
@@ -5403,6 +5478,182 @@ $("#btn-confirm-excel-import")?.addEventListener("click", ()=>{
   _excelImportData = null;
   toast(`นำเข้า ${added} รายการเรียบร้อย`);
   renderDashboard();
+});
+
+// =====================================================
+// USER MANAGEMENT (Admin only) — via Supabase RPC
+// =====================================================
+let _usersCache = [];
+
+async function renderUsers(){
+  if(currentRole !== "admin"){
+    $("#users-body").innerHTML = '<tr><td colspan="7" class="empty-state">⚠️ เฉพาะ Admin เท่านั้น</td></tr>';
+    return;
+  }
+  if(!supaClient || !supaUser){
+    $("#users-body").innerHTML = '<tr><td colspan="7" class="empty-state">ต้อง login Cloud Sync ก่อน — ไปแท็บตั้งค่า</td></tr>';
+    return;
+  }
+
+  // Branch dropdown for new user
+  const br = $("#newuser-branch");
+  if(br.options.length === 0){
+    br.innerHTML = '<option value="">— ไม่กำหนด —</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  }
+
+  $("#users-body").innerHTML = '<tr><td colspan="7" class="empty-state">⏳ กำลังโหลด...</td></tr>';
+  try{
+    const { data, error } = await supaClient.rpc("list_users");
+    if(error) throw error;
+    _usersCache = data || [];
+    filterRenderUsers();
+  }catch(e){
+    $("#users-body").innerHTML = `<tr><td colspan="7" class="empty-state" style="color:#c4392f;">โหลดล้มเหลว: ${esc(e.message)}<br><small>กรุณารัน SQL schema ใหม่เพื่อสร้าง list_users() function</small></td></tr>`;
+  }
+}
+
+function filterRenderUsers(){
+  const q = ($("#users-search").value||"").toLowerCase();
+  const rf = $("#users-filter-role").value;
+  const filtered = _usersCache.filter(u => {
+    if(rf && u.role !== rf) return false;
+    if(q && !u.email.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(filtered.length === 0){
+    $("#users-body").innerHTML = '<tr><td colspan="7" class="empty-state">ไม่พบ user ที่ตรงกับเงื่อนไข</td></tr>';
+    return;
+  }
+  const roleColor = { admin:"red", manager:"amber", staff:"blue" };
+  const roleLabel = { admin:"Admin", manager:"Manager", staff:"Staff" };
+  $("#users-body").innerHTML = filtered.map(u => {
+    const isMe = u.id === supaUser?.id;
+    return `<tr>
+      <td><strong>${esc(u.email)}</strong>${isMe?' <span class="pill blue">คุณ</span>':''}</td>
+      <td><span class="pill ${roleColor[u.role]||'gray'}">${roleLabel[u.role]||u.role}</span></td>
+      <td>${u.branch_code ? '<span class="pill blue">'+esc(u.branch_code)+'</span>' : '<span class="muted">—</span>'}</td>
+      <td><span class="muted" style="font-size:11px;">${new Date(u.created_at).toLocaleDateString("th-TH")}</span></td>
+      <td><span class="muted" style="font-size:11px;">${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("th-TH") : "—"}</span></td>
+      <td class="center">${u.email_confirmed ? '<span class="pill green">✓</span>' : '<span class="pill amber">รอยืนยัน</span>'}</td>
+      <td class="center">
+        <button class="btn sm user-edit" data-id="${u.id}" data-email="${esc(u.email)}" data-role="${u.role}" data-branch="${u.branch_code}">แก้</button>
+        <button class="btn sm user-reset" data-email="${esc(u.email)}">🔑</button>
+        ${isMe?'':`<button class="btn sm danger user-delete" data-id="${u.id}" data-email="${esc(u.email)}">ลบ</button>`}
+      </td>
+    </tr>`;
+  }).join("");
+
+  $$(".user-edit").forEach(b => b.addEventListener("click", () => editUser(b.dataset.id, b.dataset.email, b.dataset.role, b.dataset.branch)));
+  $$(".user-reset").forEach(b => b.addEventListener("click", () => resetUserPassword(b.dataset.email)));
+  $$(".user-delete").forEach(b => b.addEventListener("click", () => deleteUser(b.dataset.id, b.dataset.email)));
+}
+
+async function editUser(userId, email, currentR, currentB){
+  const dlg = $("#md-edit-dialog");
+  $("#md-edit-title").textContent = `แก้ไข User — ${email}`;
+  const branchOpts = '<option value="">— ไม่กำหนด —</option>' + visibleBranches().map(b=>`<option value="${b.code}" ${b.code===currentB?'selected':''}>${b.name}</option>`).join("");
+  $("#md-edit-body").innerHTML = `
+    <div class="form-row">
+      <div class="field"><label>Email (อ่านอย่างเดียว)</label><input type="text" value="${esc(email)}" readonly style="background:#fafbfd;"></div>
+      <div class="field">
+        <label>Role</label>
+        <select id="eu-role">
+          <option value="staff" ${currentR==='staff'?'selected':''}>Staff</option>
+          <option value="manager" ${currentR==='manager'?'selected':''}>Manager</option>
+          <option value="admin" ${currentR==='admin'?'selected':''}>Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-top:6px;">
+      <label>สาขาที่ดูแล</label>
+      <select id="eu-branch">${branchOpts}</select>
+    </div>
+  `;
+  $("#btn-md-save").onclick = async () => {
+    const role = $("#eu-role").value;
+    const branch = $("#eu-branch").value;
+    try{
+      const { error } = await supaClient.rpc("update_user_role", { target_user_id: userId, new_role: role, new_branch: branch });
+      if(error) throw error;
+      dlg.close();
+      toast(`✓ อัพเดท ${email} เป็น ${role}`);
+      logAudit("Update user role", `${email} → ${role}/${branch||'-'}`);
+      renderUsers();
+    }catch(e){ toast("ผิดพลาด: " + e.message, true); }
+  };
+  dlg.showModal();
+}
+
+async function resetUserPassword(email){
+  if(!await customConfirm(`ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ <strong>${esc(email)}</strong>?`, "Reset Password")) return;
+  try{
+    const { error } = await supaClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    if(error) throw error;
+    toast(`✓ ส่ง email reset ไปที่ ${email} แล้ว`);
+    logAudit("Reset password", email);
+  }catch(e){ toast("ส่งล้มเหลว: " + e.message, true); }
+}
+
+async function deleteUser(userId, email){
+  if(!await customConfirm(`<strong>ลบ user ${esc(email)}?</strong><br><br>การกระทำนี้ไม่สามารถยกเลิกได้`, "ยืนยันลบ User")) return;
+  try{
+    const { error } = await supaClient.rpc("delete_user", { target_user_id: userId });
+    if(error) throw error;
+    toast(`✓ ลบ ${email} เรียบร้อย`);
+    logAudit("Delete user", email);
+    renderUsers();
+  }catch(e){ toast("ลบล้มเหลว: " + e.message, true); }
+}
+
+$("#btn-add-user")?.addEventListener("click", async () => {
+  const email = $("#newuser-email").value.trim();
+  const pwd = $("#newuser-pwd").value;
+  const role = $("#newuser-role").value;
+  const branch = $("#newuser-branch").value;
+  if(!email || !pwd){ toast("กรุณากรอก Email และ Password", true); return; }
+  if(pwd.length < 8 || !/[a-zA-Z]/.test(pwd) || !/\d/.test(pwd)){
+    toast("Password ต้องอย่างน้อย 8 ตัว + มีตัวเลข + ตัวอักษร", true); return;
+  }
+
+  // Use separate temp client to avoid replacing admin's session
+  const cfg = cloudConfig();
+  if(!cfg.url || !cfg.key){ toast("Cloud config ไม่ครบ", true); return; }
+  if(typeof window.supabase === "undefined"){ toast("Supabase SDK ไม่พร้อม", true); return; }
+
+  try{
+    const tempClient = window.supabase.createClient(cfg.url, cfg.key, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
+    const { data, error } = await tempClient.auth.signUp({
+      email, password: pwd,
+      options: { data: { role, branch_code: branch } }
+    });
+    if(error) throw error;
+    if(!data.user){ toast("สมัครไม่ได้ — กรุณาตรวจ Email", true); return; }
+
+    // Now use main client (admin) to update role definitely (in case signup didn't set metadata)
+    try{
+      await supaClient.rpc("update_user_role", { target_user_id: data.user.id, new_role: role, new_branch: branch });
+    }catch(_){}
+
+    logAudit("Add user", `${email} as ${role}/${branch||'-'}`);
+    toast(`✓ สร้าง user ${email} เรียบร้อย`);
+    $("#newuser-email").value = ""; $("#newuser-pwd").value = "";
+    renderUsers();
+  }catch(e){
+    toast("สร้างล้มเหลว: " + e.message, true);
+  }
+});
+
+$("#btn-refresh-users")?.addEventListener("click", renderUsers);
+
+document.addEventListener("input", e => {
+  if(e.target.id === "users-search") filterRenderUsers();
+});
+document.addEventListener("change", e => {
+  if(e.target.id === "users-filter-role") filterRenderUsers();
 });
 
 // =====================================================
