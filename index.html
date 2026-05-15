@@ -437,6 +437,100 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
 .top-stats .qty-label { font-size:10px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.4px;}
 .top-stats .value { font-size:12px; color:#1e8a4e; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums;}
 
+/* Report page styling */
+.report-hero {
+  background:linear-gradient(135deg, #0f2c5a 0%, #1556b3 100%);
+  border-radius:14px; padding:18px 22px; margin-bottom:14px;
+  color:#fff; display:flex; align-items:center; justify-content:space-between; gap:14px;
+  box-shadow:0 8px 22px rgba(15,44,90,.18); flex-wrap:wrap;
+}
+.report-hero-content { display:flex; align-items:center; gap:14px; flex:1; min-width:0;}
+.report-hero-icon {
+  width:50px; height:50px; border-radius:12px;
+  background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; flex-shrink:0;
+}
+.report-hero-title { font-size:19px; font-weight:700; line-height:1.2; color:#fff;}
+.report-hero-sub { font-size:12px; opacity:.85; margin-top:2px;}
+.report-hero-actions { display:flex; gap:8px;}
+.report-hero-actions .btn { background:rgba(255,255,255,.15); color:#fff; border-color:rgba(255,255,255,.25);}
+.report-hero-actions .btn:hover { background:rgba(255,255,255,.25);}
+.report-hero-actions .btn.primary { background:#fff; color:#0a4cb0; border-color:#fff;}
+.report-filter-card { padding:10px 14px;}
+
+/* Insights bar */
+.insights-bar {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:10px; margin-bottom:14px;
+}
+.insight-card {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 14px; border-radius:10px;
+  background:#fff; border:1px solid #e3e6ee;
+  border-left:4px solid #1e6dd8;
+}
+.insight-card.good { border-left-color:#1e8a4e; background:linear-gradient(90deg, #f0f9f3 0%, #fff 50%);}
+.insight-card.warn { border-left-color:#a8731a; background:linear-gradient(90deg, #fdf3e0 0%, #fff 50%);}
+.insight-card.bad { border-left-color:#c4392f; background:linear-gradient(90deg, #fdf3f1 0%, #fff 50%);}
+.insight-icon { font-size:24px; flex-shrink:0;}
+.insight-content { flex:1; min-width:0;}
+.insight-content .label { font-size:10.5px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.4px;}
+.insight-content .value { font-size:14px; font-weight:700; color:#0f2c5a; margin-top:2px; line-height:1.3;}
+.insight-content .meta { font-size:11px; color:#69728a; margin-top:2px;}
+
+/* Monthly P&L row growth pills */
+.growth-pill {
+  display:inline-flex; align-items:center; gap:3px; padding:3px 9px;
+  border-radius:99px; font-size:11px; font-weight:700; font-variant-numeric:tabular-nums;
+}
+.growth-pill.up { background:#e7f4ec; color:#1e8a4e;}
+.growth-pill.down { background:#fce9e7; color:#c4392f;}
+.growth-pill.flat { background:#eef0f5; color:#69728a;}
+
+/* Best/worst row highlight in monthly table */
+#rep-monthly-table tr.best-row { background:linear-gradient(90deg, #fff9e6 0%, #fff 50%);}
+#rep-monthly-table tr.best-row td:first-child { position:relative; padding-left:24px;}
+#rep-monthly-table tr.best-row td:first-child::before {
+  content:"⭐"; position:absolute; left:8px;
+}
+
+/* Slow movers visual */
+#rep-slow-list-vis .slow-row {
+  display:grid; grid-template-columns:1fr auto auto auto;
+  align-items:center; gap:12px; padding:10px 14px;
+  background:#fff; border:1px solid #e3e6ee; border-radius:10px;
+  margin-bottom:6px;
+}
+#rep-slow-list-vis .slow-row.critical { border-color:#f0baad; background:#fdf3f1;}
+#rep-slow-list-vis .slow-name { font-size:13px; font-weight:700; color:#0f2c5a;}
+#rep-slow-list-vis .slow-name .size { font-weight:500; color:#69728a; font-size:11px;}
+#rep-slow-list-vis .slow-metric {
+  text-align:center; min-width:72px; padding:5px 8px;
+  background:#f6f9fd; border-radius:8px;
+}
+#rep-slow-list-vis .slow-metric.danger { background:#fce9e7;}
+#rep-slow-list-vis .slow-metric .v { font-size:14px; font-weight:800; color:#0f2c5a; line-height:1; font-variant-numeric:tabular-nums;}
+#rep-slow-list-vis .slow-metric .l { font-size:10px; color:#69728a; margin-top:2px; font-weight:600;}
+
+/* Turnover row */
+#rep-turnover-body td .turnover-bar {
+  display:inline-block; width:60px; height:7px; background:#eef0f5;
+  border-radius:4px; vertical-align:middle; margin-right:5px; overflow:hidden;
+}
+#rep-turnover-body td .turnover-bar-fill {
+  height:100%; border-radius:4px;
+}
+#rep-turnover-body td .tb-high { background:linear-gradient(90deg, #1e8a4e, #2dbb6c);}
+#rep-turnover-body td .tb-mid { background:linear-gradient(90deg, #a8731a, #d4a042);}
+#rep-turnover-body td .tb-low { background:linear-gradient(90deg, #c4392f, #e85a4f);}
+
+@media (max-width: 720px) {
+  .report-hero { flex-direction:column; align-items:stretch; text-align:center;}
+  .report-hero-content { justify-content:center;}
+  .insights-bar { grid-template-columns:1fr;}
+}
+
 /* Podium design — olympic style top 3 */
 .podium-wrap { padding:18px 14px 8px; background:linear-gradient(180deg, #f6f9fd 0%, #fff 100%); border-radius:12px;}
 .podium-board {
@@ -1200,11 +1294,28 @@ body[data-role="staff"] .manager-only { display:none !important; }
   </div>
 </section>
 
-<!-- =================== REPORTS =================== -->
+<!-- =================== REPORTS (Redesigned) =================== -->
 <section class="page" id="page-reports">
-  <div class="card">
-    <h2>📊 รายงานมาตรฐาน</h2>
+
+  <!-- HERO -->
+  <div class="report-hero">
+    <div class="report-hero-content">
+      <div class="report-hero-icon">📊</div>
+      <div>
+        <h1 class="report-hero-title">รายงานมาตรฐาน</h1>
+        <div class="report-hero-sub" id="report-hero-sub">ภาพรวมยอดขาย • สรุปผลประกอบการ • วิเคราะห์สินค้า</div>
+      </div>
+    </div>
+    <div class="report-hero-actions">
+      <button class="btn sm" id="btn-rep-export">📥 Export CSV</button>
+      <button class="btn sm primary" id="btn-rep-pdf">📄 Export PDF</button>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="card report-filter-card">
     <div class="toolbar">
+      <span class="muted" style="font-weight:600;font-size:12px;">🗓 ช่วงเวลา:</span>
       <select id="rep-period" class="search-input">
         <option value="month">รายเดือน (12 เดือนล่าสุด)</option>
         <option value="quarter">รายไตรมาส</option>
@@ -1212,34 +1323,77 @@ body[data-role="staff"] .manager-only { display:none !important; }
         <option value="custom">ช่วงวันที่กำหนดเอง</option>
       </select>
       <input class="search-input" id="rep-from" type="date" title="วันที่เริ่ม">
+      <span class="muted">ถึง</span>
       <input class="search-input" id="rep-to" type="date" title="วันที่สิ้นสุด">
+      <span class="muted" style="font-weight:600;font-size:12px;margin-left:8px;">🏢 สาขา:</span>
       <select id="rep-branch" class="search-input"><option value="">ทุกสาขา</option></select>
-      <div style="flex:1;"></div>
-      <button class="btn sm" id="btn-rep-export">Export CSV</button>
-      <button class="btn sm primary" id="btn-rep-pdf">Export PDF</button>
     </div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat success"><div class="label">ยอดขายรวม (ขวด)</div><div class="value" id="rep-kpi-units">0</div><div class="delta" id="rep-kpi-units-sub">ในช่วงที่เลือก</div></div>
-    <div class="stat"><div class="label">มูลค่าขายรวม</div><div class="value" id="rep-kpi-value">฿0</div><div class="delta" id="rep-kpi-value-sub">VAT รวมแล้ว</div></div>
-    <div class="stat warn"><div class="label">เฉลี่ย/วัน</div><div class="value" id="rep-kpi-avg">฿0</div><div class="delta" id="rep-kpi-avg-sub"></div></div>
-    <div class="stat alert"><div class="label">วันที่ขายดีที่สุด</div><div class="value" id="rep-kpi-best" style="font-size:18px;">—</div><div class="delta" id="rep-kpi-best-sub"></div></div>
+  <!-- KPI CARDS (dashboard style) -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-sales">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-content">
+        <div class="kpi-label">มูลค่าขายรวม</div>
+        <div class="kpi-value" id="rep-kpi-value">฿0</div>
+        <div class="kpi-trend" id="rep-kpi-value-sub">VAT รวมแล้ว</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-units">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-content">
+        <div class="kpi-label">ขายไป (ขวด)</div>
+        <div class="kpi-value" id="rep-kpi-units">0</div>
+        <div class="kpi-trend" id="rep-kpi-units-sub">ในช่วงที่เลือก</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-stock">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-content">
+        <div class="kpi-label">เฉลี่ย/วัน</div>
+        <div class="kpi-value" id="rep-kpi-avg">฿0</div>
+        <div class="kpi-trend" id="rep-kpi-avg-sub"></div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-alert">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-content">
+        <div class="kpi-label">วันที่ขายดีที่สุด</div>
+        <div class="kpi-value" id="rep-kpi-best" style="font-size:17px;">—</div>
+        <div class="kpi-trend" id="rep-kpi-best-sub"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="charts-grid">
-    <div class="card">
-      <h2>ยอดขายรายเดือน</h2>
-      <canvas id="chart-rep-monthly" height="200"></canvas>
-    </div>
-    <div class="card">
-      <h2>เปรียบเทียบสาขา</h2>
-      <canvas id="chart-rep-branch" height="200"></canvas>
-    </div>
-  </div>
+  <!-- INSIGHTS BAR -->
+  <div class="insights-bar" id="rep-insights"></div>
 
+  <!-- MONTHLY CHART -->
   <div class="card">
-    <h2>📈 รายงานยอดขายรายเดือน</h2>
+    <div class="card-header">
+      <h2>📈 ยอดขายรายเดือน</h2>
+      <p class="muted" style="font-size:11px;">เปรียบเทียบมูลค่ายอดขายและจำนวนรายเดือน</p>
+    </div>
+    <canvas id="chart-rep-monthly" height="180"></canvas>
+  </div>
+
+  <!-- BRANCH PODIUM -->
+  <div class="card">
+    <div class="card-header">
+      <h2>🏢 เปรียบเทียบสาขา</h2>
+      <p class="muted" style="font-size:11px;">เรียงจากยอดขายมากไปน้อย</p>
+    </div>
+    <div id="rep-branch-podium"></div>
+    <canvas id="chart-rep-branch" height="200" style="display:none;"></canvas>
+  </div>
+
+  <!-- MONTHLY P&L TABLE -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📋 รายงานยอดขายรายเดือน</h2>
+      <p class="muted" style="font-size:11px;">ละเอียดทุกเดือนพร้อม Growth Rate</p>
+    </div>
     <div class="table-wrap">
       <table class="tbl" id="rep-monthly-table">
         <thead>
@@ -1257,35 +1411,39 @@ body[data-role="staff"] .manager-only { display:none !important; }
     </div>
   </div>
 
-  <div class="charts-grid">
-    <div class="card">
+  <!-- TOP 10 (full width, visual list like dashboard) -->
+  <div class="card">
+    <div class="card-header">
       <h2>🔥 Top 10 สินค้าขายดี</h2>
-      <div class="table-wrap" style="max-height:340px;">
-        <table class="tbl">
-          <thead><tr><th>อันดับ</th><th>สินค้า</th><th class="num">ขวด</th><th class="num">มูลค่า</th></tr></thead>
-          <tbody id="rep-top-body"></tbody>
-        </table>
-      </div>
+      <p class="muted" style="font-size:11px;">ในช่วงที่เลือก • เรียงตามจำนวนขาย</p>
     </div>
-    <div class="card">
+    <div id="rep-top-list-vis"></div>
+    <div class="table-wrap" style="display:none;">
+      <table class="tbl"><tbody id="rep-top-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- SLOW MOVERS -->
+  <div class="card">
+    <div class="card-header">
       <h2>🐢 สินค้าเคลื่อนช้า (Slow Movers)</h2>
-      <p class="muted" style="margin-bottom:8px;font-size:11px;">เรียงตามจำนวนที่ขายต่ำสุดในช่วงที่เลือก</p>
-      <div class="table-wrap" style="max-height:340px;">
-        <table class="tbl">
-          <thead><tr><th>สินค้า</th><th class="num">ขายไป</th><th class="num">สต๊อก</th><th class="num">วันเก็บ</th></tr></thead>
-          <tbody id="rep-slow-body"></tbody>
-        </table>
-      </div>
+      <p class="muted" style="font-size:11px;">สินค้าที่ขายช้า → ควรพิจารณาโปรโมชั่นหรือลดสต๊อก • Top 10</p>
+    </div>
+    <div id="rep-slow-list-vis"></div>
+    <div class="table-wrap" style="display:none;">
+      <table class="tbl"><tbody id="rep-slow-body"></tbody></table>
     </div>
   </div>
 
   <div class="card">
-    <h2>📦 อัตราหมุนเวียนสต๊อก (Stock Turnover)</h2>
-    <p class="muted" style="margin-bottom:8px;font-size:11px;">Turnover Ratio = ขายรวมในช่วง / สต๊อกเฉลี่ย • ค่าสูง = หมุนเร็ว, ค่าต่ำ = เก็บนาน</p>
-    <div class="table-wrap" style="max-height:380px;">
+    <div class="card-header">
+      <h2>📦 อัตราหมุนเวียนสต๊อก (Stock Turnover)</h2>
+      <p class="muted" style="font-size:11px;">Turnover Ratio = ขายรวมในช่วง / สต๊อกเฉลี่ย • <span style="color:#1e8a4e;font-weight:700;">ค่าสูง = หมุนเร็ว</span> • <span style="color:#c4392f;font-weight:700;">ค่าต่ำ = เก็บนาน</span></p>
+    </div>
+    <div class="table-wrap" style="max-height:420px;">
       <table class="tbl">
         <thead>
-          <tr><th>สินค้า</th><th>ขนาด</th><th class="num">ขายในช่วง</th><th class="num">สต๊อกปัจจุบัน</th><th class="num">Turnover</th><th class="center">สถานะ</th></tr>
+          <tr><th>สินค้า</th><th>ขนาด</th><th class="num">ขายในช่วง</th><th class="num">สต๊อกปัจจุบัน</th><th class="num">Turnover</th><th class="center">ระดับ</th></tr>
         </thead>
         <tbody id="rep-turnover-body"></tbody>
       </table>
@@ -3789,49 +3947,71 @@ function renderReports(){
     slips:monthly[m].slipCount.size, avg: monthly[m].slipCount.size>0 ? monthly[m].value/monthly[m].slipCount.size : 0
   }));
 
-  // Monthly chart
+  // Hero subtitle update
+  $("#report-hero-sub").textContent = `ช่วงข้อมูล: ${thaiDate(from)} – ${thaiDate(to)} • ${branch || "ทุกสาขา"} • ${filtered.length} รายการ`;
+
+  // Monthly chart — enhanced with gradient
   if(chartRepMonthly) chartRepMonthly.destroy();
   chartRepMonthly = new Chart($("#chart-rep-monthly"), {
     type:"bar",
     data:{ labels:months.map(m=>m), datasets:[
-      { label:"มูลค่า (฿)", data:monthlyData.map(d=>d.value), backgroundColor:"#1e6dd8", borderRadius:5, yAxisID:"y" },
-      { label:"จำนวน (ขวด)", data:monthlyData.map(d=>d.qty), type:"line", borderColor:"#0f2c5a", backgroundColor:"transparent", yAxisID:"y1", tension:.3 }
+      { label:"มูลค่า (฿)", data:monthlyData.map(d=>d.value),
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,200);
+          g.addColorStop(0, "#1e6dd8"); g.addColorStop(1, "rgba(30,109,216,.3)");
+          return g;
+        },
+        borderRadius:6, yAxisID:"y", barThickness:24 },
+      { label:"จำนวน (ขวด)", data:monthlyData.map(d=>d.qty),
+        type:"line", borderColor:"#0f2c5a", backgroundColor:"transparent",
+        yAxisID:"y1", tension:.3, pointBackgroundColor:"#0f2c5a", pointRadius:3, borderWidth:2.5 }
     ]},
-    options:{ plugins:{legend:{position:"bottom"}}, scales:{
-      y:{beginAtZero:true, position:"left", ticks:{callback:v=>v>=1000?(v/1000)+"k":v}},
-      y1:{beginAtZero:true, position:"right", grid:{drawOnChartArea:false}}
-    } }
+    options:{
+      plugins:{legend:{position:"bottom", labels:{boxWidth:12, font:{size:11}}},
+        tooltip:{callbacks:{label: ctx => ctx.dataset.label.includes("฿") ? fmtMoney(ctx.parsed.y) : ctx.parsed.y + " ขวด"}}},
+      scales:{
+        y:{beginAtZero:true, position:"left", ticks:{callback:v=>v>=1000?(v/1000)+"k":v}},
+        y1:{beginAtZero:true, position:"right", grid:{drawOnChartArea:false}},
+        x:{grid:{display:false}}
+      }
+    }
   });
 
-  // Monthly table with growth rate
+  // Find best month for highlighting
+  const bestMonth = monthlyData.reduce((best, d) => d.value > (best?.value||0) ? d : best, null);
+
+  // Monthly table with growth rate (highlight best month)
   $("#rep-monthly-body").innerHTML = monthlyData.length===0 ? '<tr><td colspan="6" class="empty-state">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>' :
     monthlyData.map((d,i) => {
       const prev = i>0 ? monthlyData[i-1].value : 0;
       const growth = prev>0 ? ((d.value-prev)/prev*100) : 0;
-      const growthClass = growth>0 ? "green" : growth<0 ? "red" : "gray";
+      const growthCls = growth>0 ? "up" : growth<0 ? "down" : "flat";
       const growthSign = growth>0?"▲":growth<0?"▼":"—";
-      return `<tr>
+      const isBest = bestMonth && d.month === bestMonth.month;
+      return `<tr class="${isBest?'best-row':''}">
         <td><strong>${d.month}</strong></td>
         <td class="num">${d.slips}</td>
         <td class="num">${d.qty}</td>
         <td class="num">${fmtMoney(d.value)}</td>
         <td class="num">${fmtMoney(d.avg)}</td>
-        <td class="num"><span class="pill ${growthClass}">${growthSign} ${Math.abs(growth).toFixed(1)}%</span></td>
+        <td class="num">${prev>0?`<span class="growth-pill ${growthCls}">${growthSign} ${Math.abs(growth).toFixed(1)}%</span>`:'<span class="muted">—</span>'}</td>
       </tr>`;
     }).join("");
 
-  // Branch comparison
+  // ====== Branch comparison Podium ======
   const branchData = visibleBranches().map(b => {
     let v=0, q=0;
     filtered.forEach(r => { if(r.branchCode===b.code){ v+=r.value; q+=r.qty; } });
-    return { code:b.code, value:v, qty:q };
-  });
-  if(chartRepBranch) chartRepBranch.destroy();
-  chartRepBranch = new Chart($("#chart-rep-branch"), {
-    type:"doughnut",
-    data:{ labels:branchData.map(b=>b.code), datasets:[{ data:branchData.map(b=>b.value), backgroundColor:["#1e6dd8","#0a4cb0","#1556b3","#3b82f6","#0f2c5a","#69728a"]}]},
-    options:{ plugins:{legend:{position:"bottom"}} }
-  });
+    return { code:b.code, name:b.name, value:v, qty:q };
+  }).sort((a,b)=>b.value-a.value);
+  const branchTotal = branchData.reduce((s,b)=>s+b.value, 0) || 1;
+  const podiumEl = $("#rep-branch-podium");
+  if(branchTotal <= 1){
+    podiumEl.innerHTML = '<div class="bc-empty">ยังไม่มียอดขายในช่วงนี้</div>';
+  } else {
+    podiumEl.innerHTML = renderPodium(branchData, branchTotal);
+  }
+  if(chartRepBranch){ chartRepBranch.destroy(); chartRepBranch = null; }
 
   // Top sellers
   const byProd = {};
@@ -3842,48 +4022,122 @@ function renderReports(){
   });
   const sorted = Object.entries(byProd).sort((a,b)=>b[1].qty-a[1].qty);
   const top10 = sorted.slice(0, 10);
-  $("#rep-top-body").innerHTML = top10.length===0 ? '<tr><td colspan="4" class="empty-state">ไม่มีข้อมูล</td></tr>' :
-    top10.map(([bc,d],i)=>`<tr>
-      <td>${i+1}</td>
-      <td>${d.scent} <span class="muted">${d.size}</span></td>
-      <td class="num"><strong>${d.qty}</strong></td>
-      <td class="num">${fmtMoney(d.value)}</td>
-    </tr>`).join("");
+  const topMaxQ = top10.length>0 ? top10[0][1].qty : 1;
 
-  // Slow movers - products with sales but ranked lowest
+  // Visual Top 10 (dashboard style)
+  const repTopEl = $("#rep-top-list-vis");
+  if(top10.length === 0){
+    repTopEl.innerHTML = '<div class="dash-empty">ยังไม่มีข้อมูลในช่วงนี้</div>';
+  } else {
+    const medals = ["🥇","🥈","🥉"];
+    repTopEl.innerHTML = top10.map(([bc,d],i) => {
+      const widthPct = (d.qty/topMaxQ*100).toFixed(1);
+      const rankCls = i<3 ? `top-rank-${i+1}` : "";
+      const rankLabel = i<3 ? medals[i] : `#${i+1}`;
+      return `<div class="top-row">
+        <div class="top-rank ${rankCls}">${rankLabel}</div>
+        <div class="top-name">
+          <div class="name">${d.scent}</div>
+          <div class="meta">${d.size} • ${fmtMoney(d.value)}</div>
+          <div class="bar"><div class="bar-fill" style="width:${widthPct}%;"></div></div>
+        </div>
+        <div class="top-stats">
+          <div class="qty">${d.qty}</div>
+          <div class="qty-label">ขวด</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // Slow movers — products with sales but ranked lowest (visual cards)
   const slowMovers = PRODUCTS.filter(p => !p.is_tryme).map(p => {
     const d = byProd[p.barcode] || { qty:0, value:0 };
     let stock = 0; BRANCHES.forEach(b => stock += state.stockByBranch[b.code]?.[p.barcode]||0);
     return { ...p, soldInPeriod: d.qty, stock };
   }).filter(p => p.stock>0).sort((a,b)=>a.soldInPeriod-b.soldInPeriod).slice(0, 10);
-  $("#rep-slow-body").innerHTML = slowMovers.length===0 ? '<tr><td colspan="4" class="empty-state">ไม่มีข้อมูล</td></tr>' :
-    slowMovers.map(p=>`<tr>
-      <td>${p.scent} <span class="muted">${p.size}</span></td>
-      <td class="num">${p.soldInPeriod}</td>
-      <td class="num">${p.stock}</td>
-      <td class="num">${p.soldInPeriod>0 ? Math.round(p.stock / (p.soldInPeriod/days)) : '∞'} วัน</td>
-    </tr>`).join("");
+  const slowEl = $("#rep-slow-list-vis");
+  if(slowMovers.length === 0){
+    slowEl.innerHTML = '<div class="dash-empty">ไม่มีข้อมูล</div>';
+  } else {
+    slowEl.innerHTML = slowMovers.map(p => {
+      const daysToSell = p.soldInPeriod>0 ? Math.round(p.stock / (p.soldInPeriod/days)) : null;
+      const critical = p.soldInPeriod === 0;
+      const dangerCls = critical || (daysToSell && daysToSell > 180) ? "danger" : "";
+      return `<div class="slow-row ${critical?'critical':''}">
+        <div class="slow-name">${p.scent} <span class="size">• ${p.size}</span></div>
+        <div class="slow-metric ${critical?'danger':''}">
+          <div class="v">${p.soldInPeriod}</div>
+          <div class="l">ขายไป</div>
+        </div>
+        <div class="slow-metric">
+          <div class="v">${p.stock}</div>
+          <div class="l">สต๊อก</div>
+        </div>
+        <div class="slow-metric ${dangerCls}">
+          <div class="v">${daysToSell===null?'∞':daysToSell}</div>
+          <div class="l">วันคงเหลือ</div>
+        </div>
+      </div>`;
+    }).join("");
+  }
 
-  // Stock turnover
+  // Stock turnover — with visual bars
   const turnover = PRODUCTS.filter(p=>!p.is_tryme).map(p => {
     const sold = byProd[p.barcode]?.qty || 0;
     let stock = 0; BRANCHES.forEach(b => stock += state.stockByBranch[b.code]?.[p.barcode]||0);
     const ratio = stock>0 ? sold/stock : 0;
     return { ...p, sold, stock, ratio };
   }).filter(p => p.sold>0 || p.stock>0).sort((a,b)=>b.ratio-a.ratio);
+  const maxRatio = turnover.length>0 ? Math.max(turnover[0].ratio, 1) : 1;
   $("#rep-turnover-body").innerHTML = turnover.map(p => {
-    const status = p.ratio >= 1 ? '<span class="pill green">หมุนเร็ว</span>' :
-      p.ratio >= 0.3 ? '<span class="pill amber">ปกติ</span>' :
-      p.sold===0 ? '<span class="pill red">ไม่ขาย</span>' : '<span class="pill gray">ช้า</span>';
+    const status = p.ratio >= 1 ? '<span class="pill green">🚀 หมุนเร็ว</span>' :
+      p.ratio >= 0.3 ? '<span class="pill amber">⚡ ปกติ</span>' :
+      p.sold===0 ? '<span class="pill red">⛔ ไม่ขายเลย</span>' : '<span class="pill gray">🐢 ช้า</span>';
+    const barCls = p.ratio>=1?"tb-high":p.ratio>=0.3?"tb-mid":"tb-low";
+    const widthPct = Math.min(100, (p.ratio/maxRatio*100)).toFixed(0);
     return `<tr>
-      <td>${p.scent}</td>
+      <td><strong>${p.scent}</strong></td>
       <td>${p.size}</td>
       <td class="num">${p.sold}</td>
       <td class="num">${p.stock}</td>
-      <td class="num"><strong>${p.ratio.toFixed(2)}x</strong></td>
+      <td class="num">
+        <span class="turnover-bar"><span class="turnover-bar-fill ${barCls}" style="width:${widthPct}%;"></span></span>
+        <strong>${p.ratio.toFixed(2)}x</strong>
+      </td>
       <td class="center">${status}</td>
     </tr>`;
   }).join("");
+
+  // ====== INSIGHTS ======
+  const insights = [];
+  if(top10.length > 0){
+    insights.push({ cls:"good", icon:"🏆", label:"สินค้าขายดีที่สุด", value:`${top10[0][1].scent} ${top10[0][1].size}`, meta:`${top10[0][1].qty} ขวด • ${fmtMoney(top10[0][1].value)}` });
+  }
+  if(branchData.length > 0 && branchData[0].value > 0){
+    const pct = (branchData[0].value/branchTotal*100).toFixed(0);
+    insights.push({ cls:"good", icon:"🏢", label:"สาขาที่ขายดีสุด", value:branchData[0].code, meta:`${fmtMoney(branchData[0].value)} • ${pct}% ของยอดรวม` });
+  }
+  if(bestMonth){
+    insights.push({ cls:"good", icon:"📅", label:"เดือนที่ขายดีสุด", value:bestMonth.month, meta:`${fmtMoney(bestMonth.value)} • ${bestMonth.qty} ขวด` });
+  }
+  const zeroSales = PRODUCTS.filter(p => !p.is_tryme && !byProd[p.barcode]).length;
+  if(zeroSales > 0){
+    insights.push({ cls:"warn", icon:"⚠️", label:"สินค้าที่ไม่ขายเลย", value:`${zeroSales} รายการ`, meta:"ควรพิจารณาโปรโมชั่นหรือคืนของ" });
+  }
+  const fastMovers = turnover.filter(p=>p.ratio>=1).length;
+  if(fastMovers > 0){
+    insights.push({ cls:"good", icon:"🚀", label:"สินค้าหมุนเร็ว", value:`${fastMovers} รายการ`, meta:"Turnover ≥ 1.0x — ขายดีเทียบสต๊อก" });
+  }
+  $("#rep-insights").innerHTML = insights.slice(0,4).map(i => `
+    <div class="insight-card ${i.cls}">
+      <div class="insight-icon">${i.icon}</div>
+      <div class="insight-content">
+        <div class="label">${i.label}</div>
+        <div class="value">${i.value}</div>
+        <div class="meta">${i.meta}</div>
+      </div>
+    </div>
+  `).join("");
 }
 
 document.addEventListener("change", e=>{
