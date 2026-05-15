@@ -325,6 +325,12 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
 .dash-period-btn:hover { background:#f0f1f6;}
 .dash-period-btn.active { background:#1e6dd8; color:#fff;}
 .dash-period-info { font-size:12px; color:#69728a; font-weight:500;}
+.dash-custom-range {
+  display:flex; align-items:center; gap:8px; padding:10px 14px;
+  background:#fff; border:1px solid #e3e6ee; border-radius:10px;
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.dash-custom-range input[type="date"] { padding:6px 9px; font-size:12px;}
 
 /* KPI cards */
 .kpi-grid {
@@ -739,13 +745,24 @@ body[data-role="staff"] .manager-only { display:none !important; }
       <button class="dash-period-btn" data-period="6m">6 เดือน</button>
       <button class="dash-period-btn" data-period="year">ปีนี้</button>
       <button class="dash-period-btn" data-period="all">ทั้งหมด</button>
+      <button class="dash-period-btn" data-period="custom">📅 กำหนดเอง</button>
     </div>
     <div class="dash-period-info" id="dash-period-info"></div>
   </div>
 
+  <!-- CUSTOM DATE PICKER (hidden by default) -->
+  <div class="dash-custom-range" id="dash-custom-range" style="display:none;">
+    <span class="muted" style="font-size:12px;font-weight:600;">📅 ช่วงวันที่:</span>
+    <input type="date" id="dash-from" class="search-input" style="max-width:160px;">
+    <span class="muted">ถึง</span>
+    <input type="date" id="dash-to" class="search-input" style="max-width:160px;">
+    <button class="btn sm" id="dash-quick-this-month">เดือนนี้</button>
+    <button class="btn sm" id="dash-quick-last-month">เดือนที่แล้ว</button>
+  </div>
+
   <div class="info-strip">
     <span class="info-strip-icon">ℹ️</span>
-    <span class="info-strip-text"><strong>ข้อมูลการขายเป็นแบบฝากขาย</strong> — ระบบ KPC อัพเดทยอดให้เดือนละ 1 ครั้ง ดังนั้นยอดของเดือนปัจจุบันอาจยังไม่ครบจนกว่าจะถึงรอบอัพเดทถัดไป</span>
+    <span class="info-strip-text"><strong>ข้อมูลการขายเป็นแบบฝากขาย</strong> — ข้อมูลจะอัพเดทเดือนละ 1 ครั้ง</span>
   </div>
 
   <!-- KPI CARDS - 4 columns with trend indicators -->
@@ -1711,7 +1728,7 @@ function renderPodium(branchData, totalValue){
 
 // ------- DASHBOARD (Redesigned for monthly consignment data) -------
 let chartDashTrend;
-const dashState = { period:"lastmonth" };
+const dashState = { period:"lastmonth", customFrom:"", customTo:"" };
 
 function dashPeriodRange(period){
   const today = new Date();
@@ -1724,6 +1741,10 @@ function dashPeriodRange(period){
     case "3m": { const f=new Date(y, m-2, 1); from=fmt(f); break; }
     case "6m": { const f=new Date(y, m-5, 1); from=fmt(f); break; }
     case "year": from = `${y}-01-01`; break;
+    case "custom":
+      from = dashState.customFrom || fmt(new Date(y, m-1, 1));
+      to = dashState.customTo || fmt(today);
+      break;
     case "all":
     default: from = ""; break;
   }
@@ -1731,7 +1752,10 @@ function dashPeriodRange(period){
 }
 
 function dashPeriodLabel(period){
-  return ({thismonth:"เดือนนี้",lastmonth:"เดือนที่แล้ว","3m":"3 เดือนล่าสุด","6m":"6 เดือนล่าสุด",year:"ปีนี้",all:"ตลอดเวลา"})[period] || period;
+  if(period==="custom" && dashState.customFrom && dashState.customTo){
+    return `${thaiDate(dashState.customFrom)} - ${thaiDate(dashState.customTo)}`;
+  }
+  return ({thismonth:"เดือนนี้",lastmonth:"เดือนที่แล้ว","3m":"3 เดือนล่าสุด","6m":"6 เดือนล่าสุด",year:"ปีนี้",all:"ตลอดเวลา",custom:"กำหนดเอง"})[period] || period;
 }
 
 function renderDashboard(){
@@ -2031,6 +2055,38 @@ document.addEventListener("click", e => {
     $$(".dash-period-btn").forEach(b=>b.classList.remove("active"));
     e.target.classList.add("active");
     dashState.period = e.target.dataset.period;
+    // Show/hide custom date picker
+    const customBar = $("#dash-custom-range");
+    if(customBar) customBar.style.display = (dashState.period === "custom") ? "flex" : "none";
+    if(dashState.period === "custom"){
+      // Initialize with last month if empty
+      if(!dashState.customFrom){
+        const today = new Date();
+        const lastMonth = new Date(today.getFullYear(), today.getMonth()-1, 1);
+        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+        dashState.customFrom = lastMonth.toISOString().slice(0,10);
+        dashState.customTo = lastMonthEnd.toISOString().slice(0,10);
+      }
+      $("#dash-from").value = dashState.customFrom;
+      $("#dash-to").value = dashState.customTo;
+    }
+    renderDashboard();
+  }
+  // Quick shortcuts
+  if(e.target.id === "dash-quick-this-month"){
+    const today = new Date();
+    dashState.customFrom = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0,10);
+    dashState.customTo = today.toISOString().slice(0,10);
+    $("#dash-from").value = dashState.customFrom;
+    $("#dash-to").value = dashState.customTo;
+    renderDashboard();
+  }
+  if(e.target.id === "dash-quick-last-month"){
+    const today = new Date();
+    dashState.customFrom = new Date(today.getFullYear(), today.getMonth()-1, 1).toISOString().slice(0,10);
+    dashState.customTo = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().slice(0,10);
+    $("#dash-from").value = dashState.customFrom;
+    $("#dash-to").value = dashState.customTo;
     renderDashboard();
   }
   // Hero action buttons
@@ -2039,6 +2095,28 @@ document.addEventListener("click", e => {
     if(action==="new-slip") $$("nav.tabs button[data-tab='new']")[0]?.click();
     if(action==="new-sale") $$("nav.tabs button[data-tab='sales']")[0]?.click();
     if(action==="low-stock") $$("nav.tabs button[data-tab='stock']")[0]?.click();
+  }
+});
+
+// Custom date pickers — react to change
+document.addEventListener("change", e => {
+  if(e.target.id === "dash-from"){
+    dashState.customFrom = e.target.value;
+    if(dashState.period !== "custom"){
+      dashState.period = "custom";
+      $$(".dash-period-btn").forEach(b=>b.classList.toggle("active", b.dataset.period === "custom"));
+      $("#dash-custom-range").style.display = "flex";
+    }
+    renderDashboard();
+  }
+  if(e.target.id === "dash-to"){
+    dashState.customTo = e.target.value;
+    if(dashState.period !== "custom"){
+      dashState.period = "custom";
+      $$(".dash-period-btn").forEach(b=>b.classList.toggle("active", b.dataset.period === "custom"));
+      $("#dash-custom-range").style.display = "flex";
+    }
+    renderDashboard();
   }
 });
 
