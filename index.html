@@ -41,7 +41,9 @@ nav.tabs button.active { background:#0f2c5a; color:#fff; }
 .stat.warn .value { color:#c89020; }
 .form-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; margin-bottom:12px; }
 .field { display:flex; flex-direction:column; gap:5px;}
-.field label { font-size:12px; color:#414a66; font-weight:600;}
+.field label { font-size:12px; color:#414a66; font-weight:600; display:flex; align-items:center; gap:8px;}
+.link-btn { background:none; border:none; color:#1e6dd8; cursor:pointer; font-size:11px; font-family:inherit; padding:0; text-decoration:underline; font-weight:500;}
+.link-btn:hover { color:#0a4cb0;}
 .field input, .field select, .field textarea {
   border:1px solid #d4d8e3; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; background:#fff;
 }
@@ -746,12 +748,18 @@ body[data-role="staff"] .manager-only { display:none !important; }
         <input type="date" id="new-date">
       </div>
       <div class="field">
-        <label>PO Order Number (อัตโนมัติ)</label>
-        <input type="text" id="new-po" readonly style="background:#fafbfd;">
+        <label>
+          PO Order Number
+          <button type="button" class="link-btn" id="btn-reset-po" title="สร้างเลขอัตโนมัติใหม่">🔄 อัตโนมัติ</button>
+        </label>
+        <input type="text" id="new-po" placeholder="เช่น 201515429">
       </div>
       <div class="field">
-        <label>Delivery Number (อัตโนมัติ)</label>
-        <input type="text" id="new-dn" readonly style="background:#fafbfd;">
+        <label>
+          Delivery Number
+          <button type="button" class="link-btn" id="btn-reset-dn" title="สร้างเลขอัตโนมัติใหม่">🔄 อัตโนมัติ</button>
+        </label>
+        <input type="text" id="new-dn" placeholder="เช่น RNG-26-05-15-001">
       </div>
     </div>
     <div class="field" style="margin-bottom:12px;">
@@ -1182,6 +1190,10 @@ body[data-role="staff"] .manager-only { display:none !important; }
     <h2>ตั้งค่าระบบ</h2>
     <div class="form-row">
       <div class="field">
+        <label>ชื่อที่จะแสดงใน Dashboard 👤</label>
+        <input type="text" id="set-username" placeholder="เช่น Anavin">
+      </div>
+      <div class="field">
         <label>PO Order Number เริ่มต้น (Auto-increment)</label>
         <input type="number" id="set-po-start">
       </div>
@@ -1394,6 +1406,7 @@ function defaultState(){
     slips: HISTORICAL_SLIPS.slice(),
     salesRecords: HISTORICAL_SALES.slice(),
     settings: {
+      userName: "Anavin",
       poStart: 201515429,
       lowThreshold: 5,
       supplier: "บริษัท ทัช ไดเวอร์เจนซ์ จำกัด",
@@ -1512,7 +1525,7 @@ function renderDashboard(){
   const hour = today.getHours();
   const greeting = hour<12 ? "อรุณสวัสดิ์" : hour<17 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น";
   $("#hero-time").textContent = today.toLocaleDateString("th-TH", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
-  const userName = supaUser ? supaUser.email.split("@")[0] : "Frank";
+  const userName = (state.settings && state.settings.userName) ? state.settings.userName : (supaUser ? supaUser.email.split("@")[0] : "Anavin");
   $("#hero-title").textContent = `${greeting} ${userName} 👋`;
 
   // Today sales (regardless of period)
@@ -1805,8 +1818,9 @@ function renderNewSlip(){
   const sel = $("#new-branch"); sel.innerHTML = BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
   sel.value = newSlipState.branch;
   $("#new-date").value = newSlipState.date;
-  $("#new-po").value = nextPONumber();
-  $("#new-dn").value = nextDeliveryNumber();
+  // Use saved state.po/dn if user has edited, otherwise auto-generate
+  $("#new-po").value = newSlipState.po || nextPONumber();
+  $("#new-dn").value = newSlipState.dn || nextDeliveryNumber();
   renderNewItems();
 }
 
@@ -2732,6 +2746,7 @@ $("#btn-export-hist")?.addEventListener("click", ()=>{
 // ------- SETTINGS -------
 function renderSettings(){
   const s = state.settings;
+  $("#set-username").value = s.userName || "Anavin";
   $("#set-po-start").value = s.poStart;
   $("#set-low-threshold").value = s.lowThreshold;
   $("#set-supplier").value = s.supplier;
@@ -2739,6 +2754,7 @@ function renderSettings(){
   $("#set-supplier-addr").value = s.supplierAddr;
 }
 $("#btn-save-settings")?.addEventListener("click", ()=>{
+  state.settings.userName = $("#set-username").value.trim() || "Anavin";
   state.settings.poStart = parseInt($("#set-po-start").value)||201515429;
   state.settings.lowThreshold = parseInt($("#set-low-threshold").value)||5;
   state.settings.supplier = $("#set-supplier").value;
@@ -2746,6 +2762,7 @@ $("#btn-save-settings")?.addEventListener("click", ()=>{
   state.settings.supplierAddr = $("#set-supplier-addr").value;
   saveState();
   toast("บันทึกการตั้งค่าเรียบร้อย");
+  renderDashboard();
 });
 
 $("#btn-reset")?.addEventListener("click", ()=>{
