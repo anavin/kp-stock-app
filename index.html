@@ -1234,6 +1234,9 @@ body[data-role="staff"] .manager-only { display:none !important; }
   </div>
 
   <div class="card" id="md-branches-card" style="display:none;">
+    <p class="muted" style="margin-bottom:10px;font-size:12px;">
+      💡 สาขาที่ <strong>ซ่อน</strong> จะไม่ปรากฏใน dropdown, dashboard, รายงาน — แต่ข้อมูลในระบบยังคงอยู่ พร้อมแสดงเมื่อเปิดใหม่
+    </p>
     <div class="toolbar">
       <input class="search-input grow" id="md-br-search" placeholder="ค้นหาสาขา…">
       <button class="btn primary" id="btn-md-add-br">+ เพิ่มสาขาใหม่</button>
@@ -1421,13 +1424,16 @@ body[data-role="staff"] .manager-only { display:none !important; }
 
 // ------- BRANCH MASTER (from Main Data Base) -------
 const BRANCHES = [
-  { code:"01_KPC", name:"01_KPC - Store (สาขาที่ 00006)", full:"บริษัท คิง เพาเวอร์ คอร์ปอเรชั่น จำกัด สาขาที่ 00006", tel:"02-6778888 ต่อ 7308,7331", addr:"เลขที่ 119-121 หมู่ที่ 7 ตำบลเปร็ง อำเภอบางบ่อ จังหวัดสมุทรปราการ 10560", branchTag:"01_KPC - Store" },
-  { code:"02_KPC", name:"02_KPC - Rangnam (Head Office)", full:"KING POWER CORPORATION CO.,LTD", tel:"(662)677-8888", addr:"8 Rangnam Rd., Kweang Thanon - Phayathai Ratchathewi Bangkok 10400 Thailand", branchTag:"02_KPC - Rangnam" },
-  { code:"03_OBK", name:"03_OBK - One Bangkok", full:"KING POWER One Bangkok", tel:"-", addr:"One Bangkok, Wireless Rd., Bangkok", branchTag:"03_OBK - One Bangkok" },
-  { code:"04_SVI", name:"04_SVI - Suvarnabhumi", full:"KING POWER Suvarnabhumi", tel:"-", addr:"Suvarnabhumi International Airport", branchTag:"04_SVI - Suvarnabhumi" },
-  { code:"05_DMK", name:"05_DMK - Don Mueang Airport", full:"KING POWER Don Mueang", tel:"-", addr:"Don Mueang International Airport", branchTag:"05_DMK - Don Mueang" },
-  { code:"06_PTT", name:"06_PTT - Pattaya", full:"KING POWER Pattaya", tel:"-", addr:"Pattaya, Chonburi", branchTag:"06_PTT - Pattaya" },
+  { code:"01_KPC", name:"01_KPC - Store (สาขาที่ 00006)", full:"บริษัท คิง เพาเวอร์ คอร์ปอเรชั่น จำกัด สาขาที่ 00006", tel:"02-6778888 ต่อ 7308,7331", addr:"เลขที่ 119-121 หมู่ที่ 7 ตำบลเปร็ง อำเภอบางบ่อ จังหวัดสมุทรปราการ 10560", branchTag:"01_KPC - Store", hidden:false },
+  { code:"02_KPC", name:"02_KPC - Rangnam (Head Office)", full:"KING POWER CORPORATION CO.,LTD", tel:"(662)677-8888", addr:"8 Rangnam Rd., Kweang Thanon - Phayathai Ratchathewi Bangkok 10400 Thailand", branchTag:"02_KPC - Rangnam", hidden:false },
+  { code:"03_OBK", name:"03_OBK - One Bangkok", full:"KING POWER One Bangkok", tel:"-", addr:"One Bangkok, Wireless Rd., Bangkok", branchTag:"03_OBK - One Bangkok", hidden:true },
+  { code:"04_SVI", name:"04_SVI - Suvarnabhumi", full:"KING POWER Suvarnabhumi", tel:"-", addr:"Suvarnabhumi International Airport", branchTag:"04_SVI - Suvarnabhumi", hidden:true },
+  { code:"05_DMK", name:"05_DMK - Don Mueang Airport", full:"KING POWER Don Mueang", tel:"-", addr:"Don Mueang International Airport", branchTag:"05_DMK - Don Mueang", hidden:true },
+  { code:"06_PTT", name:"06_PTT - Pattaya", full:"KING POWER Pattaya", tel:"-", addr:"Pattaya, Chonburi", branchTag:"06_PTT - Pattaya", hidden:true },
 ];
+
+// Helper: only return branches not marked as hidden
+function visibleBranches(){ return BRANCHES.filter(b => !b.hidden); }
 
 // ------- PRODUCT MASTER -------
 const PRODUCTS = [{"order": 1, "barcode": "8857128011836", "scent": "Never Blue", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809674", "initial_stock": 22}, {"order": 2, "barcode": "8857128011843", "scent": "Zeus", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809675", "initial_stock": 8}, {"order": 3, "barcode": "8857128011850", "scent": "Secret of Peach", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809676", "initial_stock": 3}, {"order": 4, "barcode": "8857128011867", "scent": "Senorita", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809677", "initial_stock": 3}, {"order": 5, "barcode": "8857128011874", "scent": "Dream Island", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809678", "initial_stock": 12}, {"order": 6, "barcode": "8857128011881", "scent": "Persist", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809679", "initial_stock": 27}, {"order": 7, "barcode": "8857128011898", "scent": "Vivid", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809682", "initial_stock": 23}, {"order": 8, "barcode": "8857128011904", "scent": "La Belle", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809680", "initial_stock": 7}, {"order": 9, "barcode": "8857128011997", "scent": "VirginX", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4809681", "initial_stock": 30}, {"order": 10, "barcode": "8857128012001", "scent": "Queen", "size": "30 ml.", "price": 1020.56, "is_tryme": false, "goods_code": "4868250", "initial_stock": 21}, {"order": 11, "barcode": "8857128012002", "scent": "Savoury", "size": "30 ml.", "price": 1020.56, "is_tryme": false, "goods_code": "4868251", "initial_stock": 32}, {"order": 12, "barcode": "8857128012003", "scent": "Cerise Sucree", "size": "30 ml.", "price": 1020.56, "is_tryme": false, "goods_code": "8857128012003", "initial_stock": 0}, {"order": 13, "barcode": "8857128012005", "scent": "Blackest Black", "size": "30 ml.", "price": 880.37, "is_tryme": false, "goods_code": "4868253", "initial_stock": 25}, {"order": 14, "barcode": "8857128012007", "scent": "Legend of Oud", "size": "30 ml.", "price": 880.37, "is_tryme": false, "goods_code": "4868254", "initial_stock": 25}, {"order": 15, "barcode": "8857128012008", "scent": "Luscious Santal", "size": "30 ml.", "price": 880.37, "is_tryme": false, "goods_code": "4868255", "initial_stock": 29}, {"order": 16, "barcode": "8857128012009", "scent": "Patchouli Absolute", "size": "30 ml.", "price": 880.37, "is_tryme": false, "goods_code": "4868256", "initial_stock": 31}, {"order": 17, "barcode": "8857128012010", "scent": "Sparkling Mandarin", "size": "30 ml.", "price": 880.37, "is_tryme": false, "goods_code": "4868257", "initial_stock": 23}, {"order": 18, "barcode": "8857128012011", "scent": "Tropical Leather", "size": "30 ml.", "price": 880.37, "is_tryme": false, "goods_code": "4868258", "initial_stock": 25}, {"order": 19, "barcode": "8857128012013", "scent": "What", "size": "30 ml.", "price": 1020.56, "is_tryme": false, "goods_code": "4868252", "initial_stock": 24}, {"order": 20, "barcode": "8857128012014", "scent": "Moonlight", "size": "30 ml.", "price": 686.92, "is_tryme": false, "goods_code": "4868259", "initial_stock": 10}, {"order": 21, "barcode": "8857128011027", "scent": "Zeus", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832520", "initial_stock": 25}, {"order": 22, "barcode": "8857128011041", "scent": "Persist", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832524", "initial_stock": 24}, {"order": 23, "barcode": "8857128011058", "scent": "La Belle", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832525", "initial_stock": 3}, {"order": 24, "barcode": "8857128011065", "scent": "Vivid", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832527", "initial_stock": 38}, {"order": 25, "barcode": "8857128011089", "scent": "Moonlight", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4868248", "initial_stock": 4}, {"order": 26, "barcode": "8857128011119", "scent": "Secret of Peach", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832521", "initial_stock": 2}, {"order": 27, "barcode": "8857128011171", "scent": "Senorita", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832522", "initial_stock": 20}, {"order": 28, "barcode": "8857128011256", "scent": "VirginX", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832526", "initial_stock": 22}, {"order": 29, "barcode": "8857128011287", "scent": "Never Blue", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832519", "initial_stock": 27}, {"order": 30, "barcode": "8857128011300", "scent": "Dream Island", "size": "50 ml.", "price": 950.47, "is_tryme": false, "goods_code": "4832523", "initial_stock": 35}, {"order": 31, "barcode": "8857128011539", "scent": "Cerise Sucree", "size": "50 ml.", "price": 1584.11, "is_tryme": false, "goods_code": "8857128011539", "initial_stock": 0}, {"order": 32, "barcode": "8857128011591", "scent": "Gambling 34+35", "size": "50 ml.", "price": 1584.11, "is_tryme": false, "goods_code": "4868241", "initial_stock": 22}, {"order": 33, "barcode": "8857128011607", "scent": "Queen", "size": "50 ml.", "price": 1584.11, "is_tryme": false, "goods_code": "4868238", "initial_stock": 20}, {"order": 34, "barcode": "8857128011614", "scent": "Savoury", "size": "50 ml.", "price": 1584.11, "is_tryme": false, "goods_code": "4868239", "initial_stock": 24}, {"order": 35, "barcode": "8857128011645", "scent": "What", "size": "50 ml.", "price": 1584.11, "is_tryme": false, "goods_code": "4868240", "initial_stock": 20}, {"order": 36, "barcode": "8857128011669", "scent": "Blackest Black", "size": "50 ml.", "price": 1298.13, "is_tryme": false, "goods_code": "4868242", "initial_stock": 22}, {"order": 37, "barcode": "8857128011683", "scent": "Legend Of Oud", "size": "50 ml.", "price": 1298.13, "is_tryme": false, "goods_code": "4868243", "initial_stock": 23}, {"order": 38, "barcode": "8857128011690", "scent": "Luscious Santal", "size": "50 ml.", "price": 1298.13, "is_tryme": false, "goods_code": "4868244", "initial_stock": 19}, {"order": 39, "barcode": "8857128011706", "scent": "Patchouli Absolute", "size": "50 ml.", "price": 1298.13, "is_tryme": false, "goods_code": "4868245", "initial_stock": 23}, {"order": 40, "barcode": "8857128011713", "scent": "Sparkling Mandarin", "size": "50 ml.", "price": 1298.13, "is_tryme": false, "goods_code": "4868246", "initial_stock": 24}, {"order": 41, "barcode": "8857128011720", "scent": "Tropical Leather", "size": "50 ml.", "price": 1298.13, "is_tryme": false, "goods_code": "4868247", "initial_stock": 21}, {"order": 42, "barcode": "SEM50", "scent": "Senorita TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832522", "initial_stock": 0}, {"order": 43, "barcode": "DIM50", "scent": "Dream Island TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832523", "initial_stock": 0}, {"order": 44, "barcode": "QUM50", "scent": "Queen TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868238", "initial_stock": 0}, {"order": 45, "barcode": "SAM50", "scent": "Savoury TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868239", "initial_stock": 0}, {"order": 46, "barcode": "WHM50", "scent": "What TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868240", "initial_stock": 0}, {"order": 47, "barcode": "GAM50", "scent": "Gambling 34+35 TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868241", "initial_stock": 0}, {"order": 48, "barcode": "BBM50", "scent": "Blackest Black TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868242", "initial_stock": 0}, {"order": 49, "barcode": "LOM50", "scent": "Legend of Oud TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868243", "initial_stock": 0}, {"order": 50, "barcode": "LSM50", "scent": "Luscious Santal TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868244", "initial_stock": 0}, {"order": 51, "barcode": "PAM50", "scent": "Patchouli Absolute TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868245", "initial_stock": 0}, {"order": 52, "barcode": "SMM50", "scent": "Sparkling Mandarin TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868246", "initial_stock": 0}, {"order": 53, "barcode": "TLM50", "scent": "Tropical Leather TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868247", "initial_stock": 0}, {"order": 54, "barcode": "MLM50", "scent": "Moonlight TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4868248", "initial_stock": 0}, {"order": 55, "barcode": "NBM50", "scent": "Never Blue TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832519", "initial_stock": 0}, {"order": 56, "barcode": "ZEM50", "scent": "Zeus TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832520", "initial_stock": 0}, {"order": 57, "barcode": "SPM50", "scent": "Secret of Peach TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832521", "initial_stock": 0}, {"order": 58, "barcode": "PEM50", "scent": "Persist TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832524", "initial_stock": 0}, {"order": 59, "barcode": "LBM50", "scent": "La Belle TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832525", "initial_stock": 0}, {"order": 60, "barcode": "VXM50", "scent": "VirginX TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832526", "initial_stock": 0}, {"order": 61, "barcode": "VIM50", "scent": "Vivid TRY ME!", "size": "50 ml.", "price": 0, "is_tryme": true, "goods_code": "4832527", "initial_stock": 0}, {"order": 62, "barcode": "NBM30", "scent": "Never Blue TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4809674", "initial_stock": 0}, {"order": 63, "barcode": "SEM30", "scent": "Senorita TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4809677", "initial_stock": 0}, {"order": 64, "barcode": "DIM30", "scent": "Dream Island TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4809678", "initial_stock": 0}, {"order": 65, "barcode": "LBM30", "scent": "La Belle TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4809680", "initial_stock": 0}, {"order": 66, "barcode": "ZEM30", "scent": "Zeus TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4809675", "initial_stock": 0}, {"order": 67, "barcode": "VIM30", "scent": "Vivid TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4809682", "initial_stock": 0}, {"order": 68, "barcode": "QUM30", "scent": "Queen TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868250", "initial_stock": 0}, {"order": 69, "barcode": "SAM30", "scent": "Savoury TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868251", "initial_stock": 0}, {"order": 70, "barcode": "WHM30", "scent": "What TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868252", "initial_stock": 0}, {"order": 71, "barcode": "BBM30", "scent": "Blackest Black TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868253", "initial_stock": 0}, {"order": 72, "barcode": "LOM30", "scent": "Legend of Oud TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868254", "initial_stock": 0}, {"order": 73, "barcode": "LSM30", "scent": "Luscious Santal TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868255", "initial_stock": 0}, {"order": 74, "barcode": "PAM30", "scent": "Patchouli Absolute TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868256", "initial_stock": 0}, {"order": 75, "barcode": "SMM30", "scent": "Sparkling Mandarin TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868257", "initial_stock": 0}, {"order": 76, "barcode": "TLM30", "scent": "Tropical Leather TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868258", "initial_stock": 0}, {"order": 77, "barcode": "MLM30", "scent": "Moonlight TRY ME!", "size": "30 ml.", "price": 0, "is_tryme": true, "goods_code": "4868259", "initial_stock": 0}];
@@ -1758,7 +1764,7 @@ function renderDashboard(){
   }
 
   // ====== Branch comparison cards (visual, no chart) ======
-  const branchData = BRANCHES.map(b => {
+  const branchData = visibleBranches().map(b => {
     let v=0, q=0;
     periodSales.forEach(r => { if(r.branchCode===b.code){ v+=r.value; q+=r.qty; } });
     return { code:b.code, name:b.name, value:v, qty:q };
@@ -1826,7 +1832,7 @@ function renderDashboard(){
   }
 
   // ====== Branch stock list ======
-  const branchStock = BRANCHES.map(b => {
+  const branchStock = visibleBranches().map(b => {
     let units=0, value=0;
     PRODUCTS.forEach(p => {
       const q = state.stockByBranch[b.code]?.[p.barcode] || 0;
@@ -1920,7 +1926,7 @@ const newSlipState = { branch:"01_KPC", date:todayStr(), po:"", dn:"", search:""
 
 function renderNewSlip(){
   // branch dropdown
-  const sel = $("#new-branch"); sel.innerHTML = BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  const sel = $("#new-branch"); sel.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
   sel.value = newSlipState.branch;
   $("#new-date").value = newSlipState.date;
   // Use saved state.po/dn if user has edited, otherwise auto-generate
@@ -2297,7 +2303,7 @@ function renderStock(){
   // branch select
   const sel = $("#stock-branch");
   if(!sel.options.length){
-    sel.innerHTML = BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+    sel.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
   }
   const branch = sel.value || "01_KPC";
   sel.value = branch;
@@ -2461,7 +2467,7 @@ function salesAgg(){
 function renderSales(){
   // Populate selects
   const saleBranch = $("#sale-branch");
-  if(!saleBranch.options.length) saleBranch.innerHTML = BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  if(!saleBranch.options.length) saleBranch.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
   saleBranch.value = salesState.branch;
 
   const prod = $("#sale-product");
@@ -2474,14 +2480,14 @@ function renderSales(){
   $("#sale-qty").value = salesState.qty;
 
   const sbList = $("#sales-prod-branch");
-  if(sbList.options.length<=1) sbList.innerHTML = '<option value="">ทุกสาขา</option>' + BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  if(sbList.options.length<=1) sbList.innerHTML = '<option value="">ทุกสาขา</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
 
   const lbList = $("#sales-log-branch");
-  if(lbList.options.length<=1) lbList.innerHTML = '<option value="">ทุกสาขา</option>' + BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  if(lbList.options.length<=1) lbList.innerHTML = '<option value="">ทุกสาขา</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
 
   // Period filter UI
   const pbSel = $("#sales-period-branch");
-  if(pbSel.options.length<=1) pbSel.innerHTML = '<option value="">ทุกสาขา</option>' + BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  if(pbSel.options.length<=1) pbSel.innerHTML = '<option value="">ทุกสาขา</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
   $("#sales-period").value = salesState.period;
   pbSel.value = salesState.periodBranch;
   const range = computePeriodRange(salesState.period);
@@ -2516,7 +2522,7 @@ function renderSales(){
   } else { $("#sales-kpi-branch").textContent = "—"; $("#sales-kpi-branch-sub").textContent = "ยังไม่มีข้อมูล"; }
 
   // Branch comparison — visual cards (like dashboard)
-  const branchDataSales = BRANCHES.map(b => {
+  const branchDataSales = visibleBranches().map(b => {
     let v=0, q=0;
     filtered.forEach(r => { if(r.branchCode===b.code){ v+=r.value; q+=r.qty; } });
     return { code:b.code, name:b.name, value:v, qty:q };
@@ -2835,7 +2841,7 @@ $("#btn-export-sales-log")?.addEventListener("click", ()=>{
 function renderHistory(){
   const hb = $("#hist-branch");
   if(hb.options.length<=1){
-    hb.innerHTML = '<option value="">ทุกสาขา</option>' + BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+    hb.innerHTML = '<option value="">ทุกสาขา</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
   }
   const br = hb.value;
   const q = ($("#hist-search").value||"").toLowerCase();
@@ -3264,7 +3270,7 @@ function setUserRole(role, branchCode){
 // Populate signup branch dropdown
 (function(){
   const sb = $("#signup-branch");
-  if(sb) sb.innerHTML = BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  if(sb) sb.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
 })();
 
 // Toggle signup extras when sign up clicked
@@ -3369,18 +3375,34 @@ function renderMasterProducts(){
 function renderMasterBranches(){
   const q = ($("#md-br-search").value||"").toLowerCase();
   const rows = BRANCHES.filter(b => !q || b.code.toLowerCase().includes(q) || b.name.toLowerCase().includes(q));
-  $("#md-br-body").innerHTML = rows.map(b=>`<tr>
+  $("#md-br-body").innerHTML = rows.map(b=>`<tr style="${b.hidden?'opacity:.55;background:#fafbfd;':''}">
     <td><span class="muted">${b.code}</span></td>
-    <td>${b.name}</td>
+    <td>${b.name} ${b.hidden?'<span class="pill gray" style="margin-left:6px;">ซ่อน</span>':''}</td>
     <td>${b.tel||"-"}</td>
     <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.addr||''}">${b.addr||"-"}</td>
     <td class="center">
+      <button class="btn sm md-toggle-br" data-code="${b.code}" title="${b.hidden?'แสดงสาขานี้':'ซ่อนสาขานี้'}">${b.hidden?'👁 แสดง':'🔒 ซ่อน'}</button>
       <button class="btn sm md-edit-br" data-code="${b.code}">แก้</button>
       <button class="btn sm danger md-del-br" data-code="${b.code}">ลบ</button>
     </td>
   </tr>`).join("");
   $$(".md-edit-br").forEach(b => b.addEventListener("click", ()=> openBranchEdit(b.dataset.code)));
   $$(".md-del-br").forEach(b => b.addEventListener("click", ()=> deleteBranch(b.dataset.code)));
+  $$(".md-toggle-br").forEach(b => b.addEventListener("click", ()=> toggleBranchHidden(b.dataset.code)));
+}
+
+function toggleBranchHidden(code){
+  const b = BRANCHES.find(x=>x.code===code);
+  if(!b) return;
+  // Prevent hiding all branches
+  if(!b.hidden){
+    const visibleCount = BRANCHES.filter(x=>!x.hidden).length;
+    if(visibleCount<=1){ toast("ต้องมีอย่างน้อย 1 สาขาที่แสดง", true); return; }
+  }
+  b.hidden = !b.hidden;
+  saveMasterOverride();
+  renderMaster();
+  toast(b.hidden ? `ซ่อน ${b.code} เรียบร้อย` : `แสดง ${b.code} เรียบร้อย`);
 }
 
 $("#btn-md-tab-products")?.addEventListener("click", ()=>{ mdView="products"; renderMaster(); });
@@ -3458,7 +3480,7 @@ function deleteProduct(barcode){
 }
 
 function openBranchEdit(code){
-  const b = code ? BRANCHES.find(x=>x.code===code) : { code:"", name:"", full:"", tel:"", addr:"", branchTag:"" };
+  const b = code ? BRANCHES.find(x=>x.code===code) : { code:"", name:"", full:"", tel:"", addr:"", branchTag:"", hidden:false };
   if(!b) return;
   $("#md-edit-title").textContent = code ? `แก้ไขสาขา — ${b.name}` : "เพิ่มสาขาใหม่";
   $("#md-edit-body").innerHTML = `
@@ -3469,7 +3491,8 @@ function openBranchEdit(code){
     <div class="field" style="margin-bottom:10px;"><label>ชื่อเต็ม (สำหรับใบเบิก)</label><input id="mdf-full" value="${b.full||''}"></div>
     <div class="field" style="margin-bottom:10px;"><label>โทรศัพท์</label><input id="mdf-tel" value="${b.tel||''}"></div>
     <div class="field" style="margin-bottom:10px;"><label>ที่อยู่</label><textarea id="mdf-addr" rows="2">${b.addr||''}</textarea></div>
-    <div class="field"><label>Branch Tag</label><input id="mdf-tag" value="${b.branchTag||b.code}"></div>
+    <div class="field" style="margin-bottom:10px;"><label>Branch Tag</label><input id="mdf-tag" value="${b.branchTag||b.code}"></div>
+    <label class="flex-row" style="gap:6px;font-size:12px;color:#414a66;"><input type="checkbox" id="mdf-hidden" ${b.hidden?'checked':''}> 🔒 ซ่อนสาขานี้จากระบบ (ไม่แสดงใน dropdown, dashboard, รายงาน)</label>
   `;
   $("#btn-md-save").onclick = ()=>{
     const updated = {
@@ -3478,7 +3501,8 @@ function openBranchEdit(code){
       full: $("#mdf-full").value.trim(),
       tel: $("#mdf-tel").value.trim(),
       addr: $("#mdf-addr").value.trim(),
-      branchTag: $("#mdf-tag").value.trim()
+      branchTag: $("#mdf-tag").value.trim(),
+      hidden: $("#mdf-hidden").checked
     };
     if(!updated.code || !updated.name){ toast("กรุณากรอกรหัสและชื่อสาขา", true); return; }
     if(code){
@@ -3526,7 +3550,7 @@ const repState = { period:"month", from:"", to:"", branch:"" };
 function renderReports(){
   // Populate branch dropdown
   const sel = $("#rep-branch");
-  if(sel.options.length<=1) sel.innerHTML = '<option value="">ทุกสาขา</option>' + BRANCHES.map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  if(sel.options.length<=1) sel.innerHTML = '<option value="">ทุกสาขา</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
 
   // Apply role filter: staff sees only their branch
   if(currentRole==="staff" && currentRoleBranch){ sel.value = currentRoleBranch; sel.disabled = true; }
@@ -3617,7 +3641,7 @@ function renderReports(){
     }).join("");
 
   // Branch comparison
-  const branchData = BRANCHES.map(b => {
+  const branchData = visibleBranches().map(b => {
     let v=0, q=0;
     filtered.forEach(r => { if(r.branchCode===b.code){ v+=r.value; q+=r.qty; } });
     return { code:b.code, value:v, qty:q };
