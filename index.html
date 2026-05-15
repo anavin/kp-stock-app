@@ -12,6 +12,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root { color-scheme: light; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -437,6 +439,89 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
 .top-stats .qty-label { font-size:10px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.4px;}
 .top-stats .value { font-size:12px; color:#1e8a4e; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums;}
 
+/* ==== Excel Drop Zone ==== */
+.excel-drop-zone {
+  border:2px dashed #c4d1e3; border-radius:12px;
+  padding:30px 20px; text-align:center; cursor:pointer;
+  background:#f6f9fd; transition:all .15s;
+}
+.excel-drop-zone:hover, .excel-drop-zone.dragging {
+  background:#e6f0fc; border-color:#1e6dd8;
+}
+.excel-drop-icon { font-size:48px; line-height:1; margin-bottom:8px;}
+.excel-drop-text { font-size:14px; color:#0f2c5a; font-weight:500;}
+.excel-drop-hint { font-size:11px; color:#69728a; margin-top:6px;}
+
+/* ==== Undo Toast ==== */
+.undo-toast {
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:#0f2c5a; color:#fff; padding:8px 12px 8px 16px;
+  border-radius:99px; font-size:13px; box-shadow:0 8px 24px rgba(15,44,90,.3);
+  opacity:0; pointer-events:none; transition:all .25s; z-index:9999;
+  display:flex; align-items:center; gap:10px;
+}
+.undo-toast.show {
+  opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0);
+}
+.undo-toast .btn { background:#fff; color:#0f2c5a; padding:5px 12px;}
+
+/* ==== Onboarding Overlay ==== */
+.onboarding-overlay {
+  position:fixed; inset:0; z-index:9500;
+  background:rgba(15,44,90,.7); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.onboarding-card {
+  background:#fff; border-radius:16px; padding:30px 34px; max-width:480px; width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,.3); animation:ob-pop .3s ease-out;
+}
+@keyframes ob-pop { from{transform:scale(.95);opacity:0;} to{transform:scale(1);opacity:1;}}
+.onboarding-step-num {
+  display:inline-block; padding:3px 12px; border-radius:99px;
+  background:#e6f0fc; color:#1e6dd8; font-size:11px; font-weight:700;
+  margin-bottom:10px;
+}
+.onboarding-card h2 { font-size:20px; margin-bottom:8px; color:#0f2c5a;}
+.onboarding-card p { font-size:13px; color:#414a66; line-height:1.6; margin-bottom:14px;}
+.onboarding-actions { display:flex; gap:8px; align-items:center; margin-top:20px;}
+
+/* ==== Empty State with CTA ==== */
+.empty-state-cta {
+  text-align:center; padding:30px 16px; color:#69728a;
+  background:#f6f9fd; border:1px dashed #c4d1e3; border-radius:10px;
+}
+.empty-state-cta .ec-icon { font-size:36px; opacity:.6; margin-bottom:10px;}
+.empty-state-cta .ec-title { font-size:14px; color:#0f2c5a; font-weight:700; margin-bottom:4px;}
+.empty-state-cta .ec-desc { font-size:12px; margin-bottom:12px;}
+.empty-state-cta .btn { display:inline-flex;}
+
+/* ==== Reconciliation row colors ==== */
+#rec-body tr.match td { background:#f6fdf8;}
+#rec-body tr.mismatch td { background:#fef5f3;}
+.diff-pill {
+  display:inline-block; padding:2px 9px; border-radius:99px;
+  font-size:11px; font-weight:700; font-variant-numeric:tabular-nums;
+}
+.diff-pill.match { background:#e7f4ec; color:#1e8a4e;}
+.diff-pill.mismatch { background:#fce9e7; color:#c4392f;}
+
+/* ==== Returns reason chip ==== */
+.reason-chip { padding:3px 9px; border-radius:99px; font-size:11px; font-weight:600;}
+.reason-damaged { background:#fce9e7; color:#c4392f;}
+.reason-expired { background:#fdf3e0; color:#a8731a;}
+.reason-customer-return { background:#e6f0fc; color:#1e6dd8;}
+.reason-lost { background:#eef0f5; color:#69728a;}
+.reason-found { background:#e7f4ec; color:#1e8a4e;}
+.reason-other { background:#f5e8fc; color:#7a3da8;}
+
+/* Backup list */
+.backup-row {
+  display:flex; align-items:center; gap:10px; padding:8px 12px;
+  background:#f6f9fd; border-radius:8px; margin-bottom:5px;
+}
+.backup-row .bk-date { flex:1; font-size:12px; color:#0f2c5a; font-weight:600;}
+.backup-row .bk-size { font-size:11px; color:#69728a;}
+
 /* Report page styling */
 .report-hero {
   background:linear-gradient(135deg, #0f2c5a 0%, #1556b3 100%);
@@ -795,6 +880,8 @@ body[data-role="staff"] .manager-only { display:none !important; }
     <button data-tab="sales">สรุปการขาย</button>
     <button data-tab="history">ประวัติใบเบิก</button>
     <button data-tab="reports">📊 รายงาน</button>
+    <button data-tab="reconcile">⚖️ Reconcile</button>
+    <button data-tab="returns">↩️ คืน/ชำรุด</button>
     <button data-tab="master" class="admin-only">⚙️ จัดการข้อมูล</button>
     <button data-tab="settings">ตั้งค่า</button>
   </nav>
@@ -1451,6 +1538,172 @@ body[data-role="staff"] .manager-only { display:none !important; }
   </div>
 </section>
 
+<!-- =================== RECONCILIATION =================== -->
+<section class="page" id="page-reconcile">
+  <div class="report-hero">
+    <div class="report-hero-content">
+      <div class="report-hero-icon">⚖️</div>
+      <div>
+        <h1 class="report-hero-title">Reconciliation — ตรวจสอบยอด</h1>
+        <div class="report-hero-sub">เทียบ "ของส่ง" กับ "ของขาย" และ "ของคงเหลือ" • หาตัวเลขที่ไม่ตรง</div>
+      </div>
+    </div>
+    <div class="report-hero-actions">
+      <button class="btn sm" id="btn-rec-export">📥 Export CSV</button>
+    </div>
+  </div>
+
+  <div class="card report-filter-card">
+    <div class="toolbar">
+      <span class="muted" style="font-weight:600;font-size:12px;">📅 ช่วง:</span>
+      <input class="search-input" id="rec-from" type="date">
+      <span class="muted">ถึง</span>
+      <input class="search-input" id="rec-to" type="date">
+      <span class="muted" style="font-weight:600;font-size:12px;margin-left:8px;">🏢 สาขา:</span>
+      <select id="rec-branch" class="search-input"><option value="">ทุกสาขา</option></select>
+      <label class="flex-row" style="gap:6px;font-size:12px;color:#414a66;margin-left:8px;">
+        <input type="checkbox" id="rec-only-mismatch"> เฉพาะที่ไม่ตรง
+      </label>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-sales">
+      <div class="kpi-icon">📤</div>
+      <div class="kpi-content">
+        <div class="kpi-label">ของส่งไป (ขวด)</div>
+        <div class="kpi-value" id="rec-kpi-sent">0</div>
+        <div class="kpi-trend" id="rec-kpi-sent-sub"></div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-units">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-content">
+        <div class="kpi-label">ของขายไป (ขวด)</div>
+        <div class="kpi-value" id="rec-kpi-sold">0</div>
+        <div class="kpi-trend" id="rec-kpi-sold-sub"></div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-stock">
+      <div class="kpi-icon">🏪</div>
+      <div class="kpi-content">
+        <div class="kpi-label">ของคงเหลือปัจจุบัน (ขวด)</div>
+        <div class="kpi-value" id="rec-kpi-remain">0</div>
+        <div class="kpi-trend">ทุกสาขาที่แสดง</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-alert">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-content">
+        <div class="kpi-label">รายการที่ไม่ตรง</div>
+        <div class="kpi-value" id="rec-kpi-mismatch">0</div>
+        <div class="kpi-trend" id="rec-kpi-mismatch-sub">สูตร: ส่ง - ขาย - คงเหลือ = ส่วนต่าง</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>📋 ตารางตรวจสอบยอด</h2>
+      <p class="muted" style="font-size:11px;">ส่วนต่าง = ของส่ง − ของขาย − ของคงเหลือ • <span style="color:#1e8a4e;font-weight:700;">0 = ตรง</span> • <span style="color:#c4392f;font-weight:700;">≠ 0 = ต้องตรวจ</span></p>
+    </div>
+    <div class="table-wrap" style="max-height:520px;">
+      <table class="tbl" id="rec-table">
+        <thead>
+          <tr>
+            <th>รหัส</th>
+            <th>สินค้า</th>
+            <th>ขนาด</th>
+            <th>สาขา</th>
+            <th class="num">ส่งไป</th>
+            <th class="num">ขายไป</th>
+            <th class="num">คงเหลือ</th>
+            <th class="num">ส่วนต่าง</th>
+            <th class="center">สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="rec-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- =================== RETURNS =================== -->
+<section class="page" id="page-returns">
+  <div class="report-hero">
+    <div class="report-hero-content">
+      <div class="report-hero-icon">↩️</div>
+      <div>
+        <h1 class="report-hero-title">การคืนของ / สินค้าชำรุด</h1>
+        <div class="report-hero-sub">บันทึกสินค้าที่ส่งคืน, ชำรุด, หมดอายุ, สูญหาย — มีผลต่อสต๊อกทันที</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>+ บันทึกรายการคืน/ชำรุด</h2>
+    <div class="form-row">
+      <div class="field"><label>วันที่</label><input type="date" id="ret-date"></div>
+      <div class="field"><label>สาขา</label><select id="ret-branch"></select></div>
+      <div class="field" style="grid-column:span 2;"><label>สินค้า</label><select id="ret-product"></select></div>
+      <div class="field"><label>จำนวน</label><input type="number" id="ret-qty" min="1" value="1"></div>
+      <div class="field"><label>เหตุผล</label>
+        <select id="ret-reason">
+          <option value="damaged">🔨 สินค้าชำรุด</option>
+          <option value="expired">⏰ หมดอายุ</option>
+          <option value="customer-return">↩️ ลูกค้าคืน</option>
+          <option value="lost">❓ สูญหาย</option>
+          <option value="found">🎁 พบเพิ่ม</option>
+          <option value="other">📝 อื่น ๆ</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:span 2;"><label>หมายเหตุ / รายละเอียด</label><input type="text" id="ret-note" placeholder="ระบุรายละเอียด (ไม่บังคับ)"></div>
+    </div>
+    <div class="flex-row">
+      <div class="muted" id="ret-preview">เลือกสินค้าและจำนวนเพื่อดูผลกระทบสต๊อก</div>
+      <div style="flex:1;"></div>
+      <button class="btn primary" id="btn-record-return">บันทึก</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>📋 ประวัติรายการคืน/ชำรุด</h2>
+      <p class="muted" style="font-size:11px;">รายการล่าสุดบนสุด • ลบรายการจะคืนสต๊อกอัตโนมัติ</p>
+    </div>
+    <div class="toolbar">
+      <select id="ret-filter-branch" class="search-input"><option value="">ทุกสาขา</option></select>
+      <select id="ret-filter-reason" class="search-input">
+        <option value="">ทุกเหตุผล</option>
+        <option value="damaged">ชำรุด</option>
+        <option value="expired">หมดอายุ</option>
+        <option value="customer-return">ลูกค้าคืน</option>
+        <option value="lost">สูญหาย</option>
+        <option value="found">พบเพิ่ม</option>
+        <option value="other">อื่น ๆ</option>
+      </select>
+      <input class="search-input grow" id="ret-search" placeholder="ค้นหา…">
+      <button class="btn sm" id="btn-ret-export">Export CSV</button>
+    </div>
+    <div class="table-wrap" style="max-height:480px;">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th style="width:95px;">วันที่</th>
+            <th>สาขา</th>
+            <th>สินค้า</th>
+            <th class="num">จำนวน</th>
+            <th>เหตุผล</th>
+            <th>หมายเหตุ</th>
+            <th class="center">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="ret-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- =================== MASTER DATA EDITOR =================== -->
 <section class="page" id="page-master">
   <div class="card">
@@ -1533,6 +1786,14 @@ body[data-role="staff"] .manager-only { display:none !important; }
         <input type="number" id="set-low-threshold" min="0">
       </div>
       <div class="field">
+        <label>VAT (%) สำหรับใบเบิก/ใบกำกับภาษี</label>
+        <input type="number" id="set-vat" min="0" max="100" step="0.5" placeholder="0">
+      </div>
+      <div class="field">
+        <label>เลขประจำตัวผู้เสียภาษี</label>
+        <input type="text" id="set-tax-id" placeholder="0-0000-00000-00-0">
+      </div>
+      <div class="field">
         <label>บริษัทผู้ส่ง</label>
         <input type="text" id="set-supplier">
       </div>
@@ -1552,6 +1813,63 @@ body[data-role="staff"] .manager-only { display:none !important; }
       <input type="file" id="import-file" accept="application/json" style="display:none;">
       <div style="flex:1;"></div>
       <button class="btn danger" id="btn-reset">รีเซ็ตข้อมูลทั้งหมด</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📤 นำเข้ายอดขายจาก Excel (รายเดือน)</h2>
+    <p class="muted" style="margin-bottom:10px;">
+      ลากไฟล์ Excel ของ KPC ลงในกล่องด้านล่าง — ระบบจะอ่านอัตโนมัติและบันทึกเป็นรายการขาย<br>
+      <strong>คอลัมน์ที่ต้องมี:</strong> DATE, ARTICLE, REFERENCE/Barcode, QUANTITY, UNIT COST (สาขาเลือกจาก dropdown)
+    </p>
+    <div class="excel-drop-zone" id="excel-drop-zone">
+      <div class="excel-drop-icon">📊</div>
+      <div class="excel-drop-text">ลากไฟล์ Excel มาวางที่นี่ หรือ <strong>คลิกเพื่อเลือกไฟล์</strong></div>
+      <div class="excel-drop-hint">รองรับไฟล์ .xlsx, .xls, .csv</div>
+      <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none;">
+    </div>
+    <div class="form-row" style="margin-top:12px;">
+      <div class="field">
+        <label>สาขาเป้าหมาย</label>
+        <select id="import-target-branch"></select>
+      </div>
+      <div class="field">
+        <label>แทนที่ข้อมูลเดือนนี้?</label>
+        <select id="import-replace-mode">
+          <option value="append">เพิ่มข้อมูล (Append)</option>
+          <option value="replace">ลบข้อมูลเดือนนี้แล้วใส่ใหม่ (Replace month)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💾 Auto Backup</h2>
+    <p class="muted" style="margin-bottom:10px;">
+      ระบบเก็บ snapshot ข้อมูลล่าสุด 7 วันใน localStorage โดยอัตโนมัติ
+    </p>
+    <div class="flex-row">
+      <label class="flex-row" style="gap:6px;font-size:12px;color:#414a66;">
+        <input type="checkbox" id="auto-download-backup"> ดาวน์โหลด JSON อัตโนมัติทุกวัน
+      </label>
+      <div style="flex:1;"></div>
+      <span class="muted" id="last-backup-info" style="font-size:11px;"></span>
+    </div>
+    <div id="backup-list" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card">
+    <h2>📜 Audit Log — ประวัติการเปลี่ยนแปลง</h2>
+    <p class="muted" style="margin-bottom:10px;">บันทึกการกระทำสำคัญในระบบ (50 รายการล่าสุด)</p>
+    <div class="toolbar">
+      <button class="btn sm" id="btn-clear-audit">ล้าง log</button>
+      <button class="btn sm" id="btn-export-audit">Export CSV</button>
+    </div>
+    <div class="table-wrap" style="max-height:340px;">
+      <table class="tbl">
+        <thead><tr><th>เวลา</th><th>ผู้กระทำ</th><th>การกระทำ</th><th>รายละเอียด</th></tr></thead>
+        <tbody id="audit-body"></tbody>
+      </table>
     </div>
   </div>
 
@@ -1618,6 +1936,74 @@ body[data-role="staff"] .manager-only { display:none !important; }
 <div id="scanner-indicator" class="scanner-indicator" style="display:none;">
   🔍 Scanner Ready — ยิง Barcode ได้เลย
 </div>
+
+<!-- Custom Confirm Modal (replaces browser confirm) -->
+<dialog id="confirm-dialog">
+  <div class="dialog-head">
+    <h3 id="confirm-title">ยืนยัน</h3>
+  </div>
+  <div class="dialog-body">
+    <div id="confirm-message" style="font-size:13px; color:#414a66; line-height:1.6;"></div>
+  </div>
+  <div class="dialog-foot">
+    <button class="btn" id="confirm-cancel">ยกเลิก</button>
+    <button class="btn primary danger" id="confirm-ok">ตกลง</button>
+  </div>
+</dialog>
+
+<!-- Undo toast -->
+<div id="undo-toast" class="undo-toast">
+  <span id="undo-msg"></span>
+  <button class="btn sm" id="undo-btn">↶ ยกเลิก</button>
+</div>
+
+<!-- Onboarding overlay -->
+<div id="onboarding-overlay" class="onboarding-overlay" style="display:none;">
+  <div class="onboarding-card">
+    <div class="onboarding-step-num" id="ob-step-num">1 / 4</div>
+    <h2 id="ob-title">ยินดีต้อนรับสู่ระบบ Lab Parfumo</h2>
+    <p id="ob-desc"></p>
+    <div class="onboarding-actions">
+      <button class="btn" id="ob-skip">ข้าม</button>
+      <div style="flex:1;"></div>
+      <button class="btn" id="ob-back">← กลับ</button>
+      <button class="btn primary" id="ob-next">ต่อไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile camera scanner modal -->
+<dialog id="camera-scanner-dialog">
+  <div class="dialog-head">
+    <h3>📷 สแกน Barcode ด้วยกล้อง</h3>
+    <button class="btn sm" onclick="closeCamera()">✕</button>
+  </div>
+  <div class="dialog-body" style="padding:10px;">
+    <div id="camera-reader" style="width:100%; min-height:300px; border-radius:8px; overflow:hidden;"></div>
+    <p class="muted" style="text-align:center; margin-top:10px; font-size:11px;">หันกล้องไปที่ barcode บนสินค้า ระบบจะอ่านอัตโนมัติ</p>
+  </div>
+</dialog>
+
+<!-- Excel Import Preview Dialog -->
+<dialog id="excel-preview-dialog">
+  <div class="dialog-head">
+    <h3>📊 ตัวอย่างข้อมูลจาก Excel</h3>
+    <button class="btn sm" onclick="document.getElementById('excel-preview-dialog').close()">✕</button>
+  </div>
+  <div class="dialog-body">
+    <div id="excel-preview-summary"></div>
+    <div class="table-wrap" style="max-height:400px; margin-top:10px;">
+      <table class="tbl" id="excel-preview-table">
+        <thead><tr><th>วันที่</th><th>Barcode</th><th>สินค้า</th><th>ขนาด</th><th>จำนวน</th><th>ราคา</th><th>มูลค่า</th></tr></thead>
+        <tbody id="excel-preview-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="dialog-foot">
+    <button class="btn" onclick="document.getElementById('excel-preview-dialog').close()">ยกเลิก</button>
+    <button class="btn primary" id="btn-confirm-excel-import">นำเข้าข้อมูลทั้งหมด</button>
+  </div>
+</dialog>
 
 <!-- =================== LOGIN OVERLAY =================== -->
 <div class="login-overlay hidden" id="login-overlay">
@@ -1821,6 +2207,8 @@ $$("#tabs button").forEach(b => {
     if(tab==="sales") renderSales();
     if(tab==="history") renderHistory();
     if(tab==="reports") renderReports();
+    if(tab==="reconcile") renderReconcile();
+    if(tab==="returns") renderReturns();
     if(tab==="master") renderMaster();
     if(tab==="settings") renderSettings();
   });
@@ -4293,10 +4681,688 @@ function handleScannedBarcode(code){
 loadMasterOverride();
 applyRole();
 
+// =====================================================
+// CUSTOM CONFIRM MODAL (replaces browser confirm)
+// =====================================================
+let _confirmResolve = null;
+function customConfirm(message, title="ยืนยัน"){
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    $("#confirm-title").textContent = title;
+    $("#confirm-message").innerHTML = message;
+    $("#confirm-dialog").showModal();
+  });
+}
+$("#confirm-ok")?.addEventListener("click", ()=>{ $("#confirm-dialog").close(); if(_confirmResolve) _confirmResolve(true); _confirmResolve=null; });
+$("#confirm-cancel")?.addEventListener("click", ()=>{ $("#confirm-dialog").close(); if(_confirmResolve) _confirmResolve(false); _confirmResolve=null; });
+
+// Replace global confirm() with custom
+const _origConfirm = window.confirm;
+window.confirm = (msg) => {
+  // For backward compatibility — synchronous calls still use browser confirm
+  // New code should use `await customConfirm(msg)`
+  return _origConfirm(msg);
+};
+
+// =====================================================
+// UNDO STACK
+// =====================================================
+const undoStack = [];
+let undoTimer = null;
+function pushUndo(label, undoFn){
+  undoStack.push({ label, undoFn, time: Date.now() });
+  if(undoStack.length > 10) undoStack.shift();
+  showUndoToast(label);
+}
+function showUndoToast(label){
+  const t = $("#undo-toast");
+  $("#undo-msg").textContent = label;
+  t.classList.add("show");
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(()=> t.classList.remove("show"), 6000);
+}
+$("#undo-btn")?.addEventListener("click", ()=>{
+  const last = undoStack.pop();
+  if(last){ last.undoFn(); $("#undo-toast").classList.remove("show"); toast("↶ ยกเลิกแล้ว"); }
+});
+
+// =====================================================
+// AUDIT LOG (local + cloud)
+// =====================================================
+function logAudit(action, detail){
+  const entry = {
+    time: new Date().toISOString(),
+    user: (state.settings?.userName) || (supaUser?.email?.split("@")[0]) || "Anavin",
+    action, detail: detail||""
+  };
+  if(!state.auditLog) state.auditLog = [];
+  state.auditLog.unshift(entry);
+  if(state.auditLog.length > 200) state.auditLog.length = 200;
+}
+
+function renderAuditLog(){
+  const body = $("#audit-body");
+  if(!body) return;
+  const entries = (state.auditLog||[]).slice(0, 50);
+  if(entries.length === 0){
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">ยังไม่มี log</td></tr>';
+    return;
+  }
+  body.innerHTML = entries.map(e => `<tr>
+    <td><span class="muted" style="font-size:11px;">${new Date(e.time).toLocaleString("th-TH")}</span></td>
+    <td><strong>${e.user}</strong></td>
+    <td><span class="pill blue">${e.action}</span></td>
+    <td>${e.detail}</td>
+  </tr>`).join("");
+}
+
+$("#btn-clear-audit")?.addEventListener("click", async ()=>{
+  if(!await customConfirm("ล้าง audit log ทั้งหมด?")) return;
+  state.auditLog = [];
+  saveState();
+  renderAuditLog();
+});
+
+$("#btn-export-audit")?.addEventListener("click", ()=>{
+  const rows = [["เวลา","ผู้กระทำ","การกระทำ","รายละเอียด"]];
+  (state.auditLog||[]).forEach(e => rows.push([e.time, e.user, e.action, e.detail]));
+  downloadCSV(rows, `audit-log-${todayStr()}.csv`);
+});
+
+// =====================================================
+// AUTO BACKUP (last 7 daily snapshots)
+// =====================================================
+function dailyBackup(){
+  const key = `kp_backup_${todayStr()}`;
+  // Only save once per day
+  if(localStorage.getItem(key)) return;
+  try{
+    localStorage.setItem(key, JSON.stringify(state));
+    // Clean up old backups, keep last 7
+    const allKeys = Object.keys(localStorage).filter(k => k.startsWith("kp_backup_")).sort();
+    while(allKeys.length > 7){ localStorage.removeItem(allKeys.shift()); }
+    // Auto download if enabled
+    if(localStorage.getItem("kp_auto_download")==="1"){
+      const blob = new Blob([JSON.stringify(state)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `labparfumo-backup-${todayStr()}.json`;
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }
+  }catch(e){ console.warn("Backup failed", e); }
+}
+
+function renderBackupList(){
+  const el = $("#backup-list");
+  if(!el) return;
+  const keys = Object.keys(localStorage).filter(k => k.startsWith("kp_backup_")).sort().reverse();
+  if(keys.length === 0){
+    el.innerHTML = '<div class="muted" style="font-size:11px;">ยังไม่มี snapshot</div>';
+    return;
+  }
+  el.innerHTML = keys.map(k => {
+    const date = k.replace("kp_backup_","");
+    const size = (localStorage.getItem(k)?.length || 0) / 1024;
+    return `<div class="backup-row">
+      <div class="bk-date">📅 ${thaiDate(date)}</div>
+      <span class="bk-size">${size.toFixed(0)} KB</span>
+      <button class="btn sm restore-bk" data-key="${k}">Restore</button>
+      <button class="btn sm" data-bk-download="${k}">⬇</button>
+    </div>`;
+  }).join("");
+
+  $$(".restore-bk").forEach(b => b.addEventListener("click", async ()=>{
+    if(!await customConfirm("คืนค่าจาก snapshot นี้? ข้อมูลปัจจุบันจะถูกทับ", "Restore Backup")) return;
+    const data = localStorage.getItem(b.dataset.key);
+    if(data){ state = JSON.parse(data); saveState(); toast("Restore เรียบร้อย"); renderDashboard(); }
+  }));
+  $$("[data-bk-download]").forEach(b => b.addEventListener("click", ()=>{
+    const data = localStorage.getItem(b.dataset.bkDownload);
+    const blob = new Blob([data], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${b.dataset.bkDownload}.json`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }));
+
+  const last = keys[0]?.replace("kp_backup_","");
+  $("#last-backup-info").textContent = last ? `อัพเดทล่าสุด: ${thaiDate(last)}` : "ยังไม่มี backup";
+}
+
+$("#auto-download-backup")?.addEventListener("change", e => {
+  localStorage.setItem("kp_auto_download", e.target.checked ? "1" : "0");
+  toast(e.target.checked ? "เปิด Auto Download" : "ปิด Auto Download");
+});
+
+// =====================================================
+// EXCEL IMPORT (Monthly sales)
+// =====================================================
+let _excelImportData = null;
+
+function setupExcelImport(){
+  const dropZone = $("#excel-drop-zone");
+  const fileInput = $("#excel-file-input");
+  const targetSel = $("#import-target-branch");
+
+  if(targetSel && targetSel.options.length === 0){
+    targetSel.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  }
+
+  if(dropZone && !dropZone.dataset.bound){
+    dropZone.dataset.bound = "1";
+    dropZone.addEventListener("click", ()=> fileInput.click());
+    dropZone.addEventListener("dragover", e=>{ e.preventDefault(); dropZone.classList.add("dragging"); });
+    dropZone.addEventListener("dragleave", ()=> dropZone.classList.remove("dragging"));
+    dropZone.addEventListener("drop", e=>{
+      e.preventDefault(); dropZone.classList.remove("dragging");
+      const file = e.dataTransfer.files[0]; if(file) handleExcelFile(file);
+    });
+    fileInput.addEventListener("change", e=>{
+      const file = e.target.files[0]; if(file) handleExcelFile(file);
+    });
+  }
+}
+
+function handleExcelFile(file){
+  if(typeof XLSX === "undefined"){ toast("Library Excel ยังโหลดไม่เสร็จ", true); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:"array", cellDates:true});
+      // Try first sheet
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, dateNF:"yyyy-mm-dd"});
+      // Try to detect header row
+      let headerRow = -1;
+      for(let i=0; i<Math.min(rows.length, 20); i++){
+        const r = rows[i].map(c => String(c||"").toLowerCase());
+        if(r.some(c => c.includes("date") || c.includes("วันที่")) && r.some(c => c.includes("quantity") || c.includes("จำนวน") || c.includes("qty"))){
+          headerRow = i; break;
+        }
+      }
+      if(headerRow < 0){ toast("ไม่พบ header row ที่มีคำว่า DATE/QUANTITY", true); return; }
+
+      const headers = rows[headerRow].map(c => String(c||"").toLowerCase().trim());
+      const idx = {
+        date: headers.findIndex(h => h.includes("date") || h.includes("วันที่")),
+        article: headers.findIndex(h => h.includes("article") || h === "รหัสสินค้า"),
+        desc: headers.findIndex(h => h.includes("description") || h.includes("รายการ") || h.includes("name")),
+        size: headers.findIndex(h => h.includes("size") || h.includes("ขนาด")),
+        ref: headers.findIndex(h => h.includes("reference") || h.includes("barcode")),
+        docno: headers.findIndex(h => h.includes("doc")),
+        cost: headers.findIndex(h => h.includes("unit cost") || h.includes("ราคา/หน่วย") || h.includes("price")),
+        qty: headers.findIndex(h => h.includes("quantity") || h === "qty" || h.includes("จำนวน")),
+        total: headers.findIndex(h => h.includes("total cost") || h.includes("total") || h.includes("ราคาสุทธิ")),
+      };
+
+      const records = [];
+      for(let i=headerRow+1; i<rows.length; i++){
+        const r = rows[i];
+        if(!r || r.length === 0) continue;
+        const dateRaw = r[idx.date]; if(!dateRaw) continue;
+        const qty = parseInt(r[idx.qty]); if(!qty || isNaN(qty)) continue;
+        let date = dateRaw;
+        if(dateRaw instanceof Date) date = dateRaw.toISOString().slice(0,10);
+        else if(typeof dateRaw === "string"){
+          // Try parse
+          const d = new Date(dateRaw);
+          if(!isNaN(d)) date = d.toISOString().slice(0,10);
+        }
+        const ref = idx.ref >= 0 ? String(r[idx.ref]||"").trim() : "";
+        const desc = idx.desc >= 0 ? String(r[idx.desc]||"") : "";
+        const size = idx.size >= 0 ? String(r[idx.size]||"") : "";
+        const cost = idx.cost >= 0 ? parseFloat(r[idx.cost])||0 : 0;
+        const total = idx.total >= 0 ? parseFloat(r[idx.total])||0 : (qty*cost);
+        const article = idx.article >= 0 ? String(r[idx.article]||"") : "";
+        const docno = idx.docno >= 0 ? String(r[idx.docno]||"") : "";
+
+        // Match product by barcode
+        const product = PRODUCTS.find(p => p.barcode === ref) || PRODUCTS.find(p => p.goods_code === article);
+        records.push({
+          date, barcode: ref || (product?.barcode||""),
+          scent: product?.scent || desc.replace(/LPF\s+\d+ML\s+/i,"").replace(/EAU DE PARFUM/i,"").trim() || desc,
+          size: product?.size || size || "",
+          goods_code: product?.goods_code || article,
+          qty, price: cost, value: total,
+          note: docno ? `Doc: ${docno}` : ""
+        });
+      }
+
+      if(records.length === 0){ toast("ไม่พบรายการที่ valid ในไฟล์", true); return; }
+
+      _excelImportData = records;
+      // Show preview
+      $("#excel-preview-summary").innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+          <div class="kpi-card kpi-units"><div class="kpi-icon">📊</div><div class="kpi-content"><div class="kpi-label">จำนวนรายการ</div><div class="kpi-value">${records.length}</div></div></div>
+          <div class="kpi-card kpi-sales"><div class="kpi-icon">💰</div><div class="kpi-content"><div class="kpi-label">มูลค่ารวม</div><div class="kpi-value">${fmtMoney(records.reduce((s,r)=>s+r.value,0))}</div></div></div>
+          <div class="kpi-card kpi-stock"><div class="kpi-icon">📦</div><div class="kpi-content"><div class="kpi-label">รวม (ขวด)</div><div class="kpi-value">${records.reduce((s,r)=>s+r.qty,0)}</div></div></div>
+        </div>`;
+      const previewRows = records.slice(0, 50).map(r => `<tr>
+        <td>${r.date}</td>
+        <td><span class="muted">${r.barcode}</span></td>
+        <td>${r.scent}</td>
+        <td>${r.size}</td>
+        <td class="num">${r.qty}</td>
+        <td class="num">${fmtMoney(r.price)}</td>
+        <td class="num">${fmtMoney(r.value)}</td>
+      </tr>`).join("");
+      $("#excel-preview-body").innerHTML = previewRows + (records.length>50 ? `<tr><td colspan="7" class="empty-state">... และอีก ${records.length-50} รายการ</td></tr>` : "");
+      $("#excel-preview-dialog").showModal();
+
+    }catch(e){ console.error(e); toast("อ่านไฟล์ล้มเหลว: "+e.message, true); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+$("#btn-confirm-excel-import")?.addEventListener("click", ()=>{
+  if(!_excelImportData) return;
+  const branch = $("#import-target-branch").value || "01_KPC";
+  const mode = $("#import-replace-mode").value || "append";
+
+  // Determine months to clear if mode = replace
+  const monthsToReplace = new Set();
+  if(mode === "replace"){
+    _excelImportData.forEach(r => monthsToReplace.add(r.date.slice(0,7)));
+    // Remove existing sales in those months for the target branch
+    state.salesRecords = state.salesRecords.filter(r => !(monthsToReplace.has(r.date.slice(0,7)) && r.branchCode === branch));
+  }
+
+  let added = 0;
+  _excelImportData.forEach(r => {
+    state.salesRecords.push({
+      id: "sale_imp_" + Date.now() + "_" + (added++),
+      date: r.date,
+      branchCode: branch,
+      barcode: r.barcode,
+      scent: r.scent,
+      size: r.size,
+      goods_code: r.goods_code,
+      qty: r.qty,
+      price: r.price,
+      value: r.value,
+      note: r.note + " [Excel Import]",
+      createdAt: new Date().toISOString()
+    });
+    // Update soldByBranch counter
+    state.soldByBranch[branch] = state.soldByBranch[branch] || {};
+    state.soldByBranch[branch][r.barcode] = (state.soldByBranch[branch][r.barcode]||0) + r.qty;
+  });
+
+  logAudit("นำเข้ายอดขาย", `${added} รายการเข้าสาขา ${branch}`);
+  saveState();
+  $("#excel-preview-dialog").close();
+  _excelImportData = null;
+  toast(`นำเข้า ${added} รายการเรียบร้อย`);
+  renderDashboard();
+});
+
+// =====================================================
+// RECONCILIATION
+// =====================================================
+function renderReconcile(){
+  const sel = $("#rec-branch");
+  if(sel.options.length<=1) sel.innerHTML = '<option value="">ทุกสาขา</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+
+  const today = new Date();
+  const monthAgo = new Date(today.getFullYear(), today.getMonth()-3, 1);
+  if(!$("#rec-from").value) $("#rec-from").value = monthAgo.toISOString().slice(0,10);
+  if(!$("#rec-to").value) $("#rec-to").value = today.toISOString().slice(0,10);
+
+  const from = $("#rec-from").value;
+  const to = $("#rec-to").value;
+  const branchFilter = $("#rec-branch").value;
+  const onlyMismatch = $("#rec-only-mismatch").checked;
+
+  // For each product × branch — sum sent and sold within period
+  const rows = [];
+  let totalSent=0, totalSold=0, totalRemain=0, mismatchCount=0;
+
+  visibleBranches().forEach(b => {
+    if(branchFilter && b.code !== branchFilter) return;
+    PRODUCTS.filter(p => !p.is_tryme).forEach(p => {
+      let sent = 0, sold = 0;
+      state.slips.forEach(s => {
+        if(s.branchCode !== b.code) return;
+        if(s.date < from || s.date > to) return;
+        s.items.forEach(it => { if(it.barcode === p.barcode) sent += it.qty; });
+      });
+      state.salesRecords.forEach(r => {
+        if(r.branchCode !== b.code) return;
+        if(r.date < from || r.date > to) return;
+        if(r.barcode === p.barcode) sold += r.qty;
+      });
+      const remain = state.stockByBranch[b.code]?.[p.barcode] || 0;
+      if(sent === 0 && sold === 0 && remain === 0) return;
+
+      // For consignment: sent should be enough to cover sold + remaining
+      // diff = sent - sold - remain (should be 0 ideally, but for partial period might differ)
+      const diff = sent - sold - remain;
+      rows.push({ branch:b.code, p, sent, sold, remain, diff });
+      totalSent += sent; totalSold += sold; totalRemain += remain;
+      if(Math.abs(diff) > 0) mismatchCount++;
+    });
+  });
+
+  $("#rec-kpi-sent").textContent = fmtInt(totalSent);
+  $("#rec-kpi-sold").textContent = fmtInt(totalSold);
+  $("#rec-kpi-remain").textContent = fmtInt(totalRemain);
+  $("#rec-kpi-mismatch").textContent = mismatchCount;
+
+  const filtered = onlyMismatch ? rows.filter(r => Math.abs(r.diff) > 0) : rows;
+
+  const body = $("#rec-body");
+  if(filtered.length === 0){
+    body.innerHTML = '<tr><td colspan="9" class="empty-state">' + (onlyMismatch ? '✓ ไม่พบรายการที่ไม่ตรง' : 'ไม่มีข้อมูลในช่วงนี้') + '</td></tr>';
+    return;
+  }
+
+  body.innerHTML = filtered.sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff)).map(r => {
+    const matched = r.diff === 0;
+    return `<tr class="${matched?'match':'mismatch'}">
+      <td><span class="muted">${r.p.goods_code||"-"}</span></td>
+      <td>${r.p.scent}</td>
+      <td>${r.p.size}</td>
+      <td><span class="pill blue">${r.branch}</span></td>
+      <td class="num">${r.sent}</td>
+      <td class="num">${r.sold}</td>
+      <td class="num">${r.remain}</td>
+      <td class="num"><strong>${r.diff>0?'+':''}${r.diff}</strong></td>
+      <td class="center">${matched ? '<span class="diff-pill match">✓ ตรง</span>' : '<span class="diff-pill mismatch">⚠ ไม่ตรง</span>'}</td>
+    </tr>`;
+  }).join("");
+}
+
+document.addEventListener("change", e => {
+  if(["rec-from","rec-to","rec-branch","rec-only-mismatch"].includes(e.target.id)) renderReconcile();
+});
+
+$("#btn-rec-export")?.addEventListener("click", ()=>{
+  const rows = [["รหัส","สินค้า","ขนาด","สาขา","ส่งไป","ขายไป","คงเหลือ","ส่วนต่าง","สถานะ"]];
+  $$("#rec-body tr").forEach(tr => {
+    const cells = Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim());
+    if(cells.length >= 9) rows.push(cells);
+  });
+  downloadCSV(rows, `reconcile-${todayStr()}.csv`);
+});
+
+// =====================================================
+// RETURNS / DAMAGES
+// =====================================================
+const returnsState = { branch:"01_KPC", date:todayStr(), barcode:"", qty:1, reason:"damaged", note:"" };
+
+function renderReturns(){
+  // Init state structure
+  if(!state.returns) state.returns = [];
+
+  // Populate dropdowns
+  const br = $("#ret-branch");
+  if(br.options.length === 0) br.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  const fb = $("#ret-filter-branch");
+  if(fb.options.length <= 1) fb.innerHTML = '<option value="">ทุกสาขา</option>' + visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
+  const pr = $("#ret-product");
+  if(pr.options.length === 0) pr.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + PRODUCTS.filter(p=>!p.is_tryme).map(p =>
+    `<option value="${p.barcode}">${p.scent} • ${p.size}</option>`).join("");
+
+  $("#ret-date").value = returnsState.date;
+  $("#ret-qty").value = returnsState.qty;
+
+  // Render history
+  const list = state.returns.slice().reverse();
+  const fbr = fb.value, frs = $("#ret-filter-reason").value, q = ($("#ret-search").value||"").toLowerCase();
+  const filtered = list.filter(r => {
+    if(fbr && r.branch !== fbr) return false;
+    if(frs && r.reason !== frs) return false;
+    if(q && !(r.scent.toLowerCase().includes(q) || (r.note||"").toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const body = $("#ret-body");
+  if(filtered.length === 0){
+    body.innerHTML = '<tr><td colspan="7" class="empty-state">ยังไม่มีรายการคืน</td></tr>';
+  } else {
+    const reasonLabels = { damaged:"🔨 ชำรุด", expired:"⏰ หมดอายุ", "customer-return":"↩️ ลูกค้าคืน", lost:"❓ สูญหาย", found:"🎁 พบเพิ่ม", other:"📝 อื่น ๆ" };
+    body.innerHTML = filtered.map(r => `<tr>
+      <td>${thaiDate(r.date)}</td>
+      <td><span class="pill blue">${r.branch}</span></td>
+      <td>${r.scent} <span class="muted">• ${r.size}</span></td>
+      <td class="num"><strong>${r.qty}</strong></td>
+      <td><span class="reason-chip reason-${r.reason}">${reasonLabels[r.reason]||r.reason}</span></td>
+      <td><span class="muted">${r.note||"-"}</span></td>
+      <td class="center"><button class="btn sm danger ret-del" data-id="${r.id}">ลบ</button></td>
+    </tr>`).join("");
+    $$(".ret-del").forEach(b => b.addEventListener("click", async ()=>{
+      if(!await customConfirm("ลบรายการนี้? สต๊อกจะถูกคืน", "ยืนยันลบ")) return;
+      const idx = state.returns.findIndex(x => x.id === b.dataset.id);
+      if(idx < 0) return;
+      const r = state.returns[idx];
+      // Restore stock
+      if(r.reason === "found"){
+        // 'found' added stock, so restoring deletes it
+        state.stockByBranch[r.branch][r.barcode] = Math.max(0, (state.stockByBranch[r.branch][r.barcode]||0) - r.qty);
+      } else {
+        state.stockByBranch[r.branch][r.barcode] = (state.stockByBranch[r.branch][r.barcode]||0) + r.qty;
+      }
+      state.returns.splice(idx, 1);
+      logAudit("ลบรายการคืน", `${r.scent} ${r.size} x ${r.qty}`);
+      saveState();
+      renderReturns();
+      toast("ลบเรียบร้อย");
+    }));
+  }
+
+  updateReturnPreview();
+}
+
+function updateReturnPreview(){
+  const bc = $("#ret-product").value;
+  const qty = Math.max(1, parseInt($("#ret-qty").value)||1);
+  const p = PRODUCTS.find(x => x.barcode === bc);
+  const branch = $("#ret-branch").value;
+  const reason = $("#ret-reason").value;
+  if(!p){ $("#ret-preview").textContent = "เลือกสินค้าและจำนวน"; return; }
+  const stock = state.stockByBranch[branch]?.[bc]||0;
+  const action = reason === "found" ? "เพิ่มสต๊อก" : "ลดสต๊อก";
+  const newStock = reason === "found" ? stock + qty : Math.max(0, stock - qty);
+  $("#ret-preview").innerHTML = `${p.scent} ${p.size} × <strong>${qty}</strong> → ${action} จาก <strong>${stock}</strong> เป็น <strong>${newStock}</strong>`;
+}
+
+document.addEventListener("change", e => {
+  if(["ret-branch","ret-product","ret-reason"].includes(e.target.id)) updateReturnPreview();
+  if(["ret-filter-branch","ret-filter-reason"].includes(e.target.id)) renderReturns();
+});
+document.addEventListener("input", e => {
+  if(e.target.id === "ret-qty") updateReturnPreview();
+  if(e.target.id === "ret-search") renderReturns();
+});
+
+$("#btn-record-return")?.addEventListener("click", ()=>{
+  const branch = $("#ret-branch").value;
+  const bc = $("#ret-product").value;
+  const qty = Math.max(1, parseInt($("#ret-qty").value)||1);
+  const date = $("#ret-date").value || todayStr();
+  const reason = $("#ret-reason").value;
+  const note = $("#ret-note").value;
+  const p = PRODUCTS.find(x => x.barcode === bc);
+  if(!p){ toast("กรุณาเลือกสินค้า", true); return; }
+  if(!state.returns) state.returns = [];
+  const rec = {
+    id: "ret_"+Date.now(),
+    date, branch, barcode:bc,
+    scent:p.scent, size:p.size,
+    qty, reason, note,
+    createdAt: new Date().toISOString()
+  };
+  state.returns.push(rec);
+  // Adjust stock
+  if(reason === "found"){
+    state.stockByBranch[branch][bc] = (state.stockByBranch[branch][bc]||0) + qty;
+  } else {
+    state.stockByBranch[branch][bc] = Math.max(0, (state.stockByBranch[branch][bc]||0) - qty);
+  }
+  logAudit("บันทึกการคืน", `${p.scent} ${p.size} x ${qty} (${reason})`);
+  saveState();
+  $("#ret-note").value = ""; $("#ret-qty").value = 1; returnsState.qty = 1;
+  toast(`บันทึก ${p.scent} เรียบร้อย`);
+  renderReturns();
+});
+
+$("#btn-ret-export")?.addEventListener("click", ()=>{
+  const rows = [["วันที่","สาขา","Barcode","สินค้า","ขนาด","จำนวน","เหตุผล","หมายเหตุ"]];
+  (state.returns||[]).forEach(r => rows.push([r.date, r.branch, r.barcode, r.scent, r.size, r.qty, r.reason, r.note||""]));
+  downloadCSV(rows, `returns-${todayStr()}.csv`);
+});
+
+// =====================================================
+// ONBOARDING TOUR
+// =====================================================
+const onboardingSteps = [
+  { title:"ยินดีต้อนรับสู่ระบบ Lab Parfumo 👋", desc:"ระบบบริหารสต๊อก-การขายน้ำหอม Lab Parfumo สำหรับ King Power 6 สาขา<br><br>คู่มือนี้จะแนะนำสิ่งที่ควรทำก่อนเริ่มใช้งานจริง (4 ขั้นตอน ใช้เวลา 5 นาที)" },
+  { title:"ขั้นที่ 1: ตั้งค่า Cloud Sync ☁️", desc:"แนะนำให้เชื่อม <strong>Supabase</strong> เพื่อแชร์ข้อมูลระหว่างเครื่อง<br>• เปิดแท็บ <strong>ตั้งค่า</strong> → หา Cloud Sync<br>• ใส่ Project URL + Anon Key<br>• Login ด้วย email — ถ้ายังไม่มีให้สมัครใหม่<br><br>* ใช้แบบ Local-only ก็ได้ (ข้ามขั้นนี้)" },
+  { title:"ขั้นที่ 2: นำเข้ายอดขายเดือนล่าสุด 📤", desc:"ลากไฟล์ Excel ของ KPC ลงในกล่อง Import → ระบบจะอ่านอัตโนมัติ:<br>• ตรวจดูตัวอย่างก่อน confirm<br>• เลือกโหมด: Append (เพิ่ม) หรือ Replace (แทนที่เดือนนี้)<br>• ระบบ map barcode อัตโนมัติกับ master data" },
+  { title:"ขั้นที่ 3: สร้างใบเบิกครั้งแรก 📝", desc:"ที่แท็บ <strong>บันทึกใบเบิก</strong>:<br>• เลือกสาขา, ใส่จำนวนสินค้าที่จะส่ง<br>• PO/Delivery Number เลขจะออกอัตโนมัติ (แก้ไขได้)<br>• กด <strong>ดูตัวอย่าง</strong> → พิมพ์ใบเบิก + ใบส่งของออกมาเซ็นรับ" },
+  { title:"พร้อมใช้งานแล้ว! 🎉", desc:"ระบบมีฟีเจอร์เพิ่มเติมที่อยากแนะนำ:<br>• <strong>Reconcile</strong> — เทียบยอดส่ง-ขาย-คงเหลือ<br>• <strong>คืน/ชำรุด</strong> — บันทึกของชำรุด/หมดอายุ<br>• <strong>รายงาน</strong> — Top sellers, Slow movers, Stock turnover<br>• <strong>Dashboard</strong> — สรุปผลรายเดือน<br><br>ถ้าสงสัยอะไรถามใน chat ได้เลยครับ" },
+];
+let obStep = 0;
+
+function showOnboarding(){
+  obStep = 0;
+  $("#onboarding-overlay").style.display = "flex";
+  updateOnboardingStep();
+}
+function hideOnboarding(){
+  $("#onboarding-overlay").style.display = "none";
+  localStorage.setItem("kp_onboarded","1");
+}
+function updateOnboardingStep(){
+  const s = onboardingSteps[obStep];
+  $("#ob-step-num").textContent = `${obStep+1} / ${onboardingSteps.length}`;
+  $("#ob-title").textContent = s.title;
+  $("#ob-desc").innerHTML = s.desc;
+  $("#ob-back").style.visibility = obStep === 0 ? "hidden" : "visible";
+  $("#ob-next").textContent = obStep === onboardingSteps.length-1 ? "เริ่มใช้งาน ✓" : "ต่อไป →";
+}
+$("#ob-next")?.addEventListener("click", ()=>{
+  if(obStep === onboardingSteps.length-1){ hideOnboarding(); return; }
+  obStep++; updateOnboardingStep();
+});
+$("#ob-back")?.addEventListener("click", ()=>{ obStep = Math.max(0, obStep-1); updateOnboardingStep(); });
+$("#ob-skip")?.addEventListener("click", hideOnboarding);
+
+// =====================================================
+// MOBILE CAMERA SCANNER
+// =====================================================
+let html5QrCode = null;
+function openCamera(){
+  if(typeof Html5Qrcode === "undefined"){ toast("Library ยังโหลดไม่เสร็จ", true); return; }
+  $("#camera-scanner-dialog").showModal();
+  if(!html5QrCode) html5QrCode = new Html5Qrcode("camera-reader");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps:10, qrbox:{width:250, height:120} },
+    (decodedText) => {
+      handleScannedBarcode(decodedText);
+      closeCamera();
+    },
+    () => {}
+  ).catch(e => toast("เปิดกล้องล้มเหลว: "+e.message, true));
+}
+function closeCamera(){
+  if(html5QrCode && html5QrCode.isScanning){
+    html5QrCode.stop().catch(()=>{});
+  }
+  $("#camera-scanner-dialog").close();
+}
+window.closeCamera = closeCamera;
+
+// Replace existing scanner button to also offer camera option on mobile
+function isMobileDevice(){
+  return /android|iphone|ipad|ipod/i.test(navigator.userAgent) || window.innerWidth < 768;
+}
+const _origToggleScanner = toggleScanner;
+window.toggleScanner = function(){
+  if(isMobileDevice()){
+    openCamera();
+  } else {
+    _origToggleScanner();
+  }
+};
+
+// =====================================================
+// VAT INTEGRATION (already in showPreview but use settings)
+// =====================================================
+// We'll add VAT support in slip preview — update showPreview wrapper
+const _showPreviewVAT = showPreview;
+showPreview = function(slip, isSaved){
+  // Add VAT info to slip
+  const vatPct = parseFloat(state.settings.vat) || 0;
+  slip.vatPct = vatPct;
+  slip.vatAmount = slip.totalValue * (vatPct/100);
+  slip.grandTotal = slip.totalValue + slip.vatAmount;
+  _showPreviewVAT(slip, isSaved);
+};
+
+// =====================================================
+// EMPTY STATES — improve with CTAs
+// =====================================================
+const _renderHistoryOrig = renderHistory;
+renderHistory = function(){
+  _renderHistoryOrig();
+  // Override empty state with CTA
+  const body = $("#hist-body");
+  if(body && body.textContent.includes("ยังไม่มีใบเบิก")){
+    body.innerHTML = `<tr><td colspan="8">
+      <div class="empty-state-cta">
+        <div class="ec-icon">📝</div>
+        <div class="ec-title">ยังไม่มีใบเบิกในระบบ</div>
+        <div class="ec-desc">เริ่มสร้างใบเบิกแรกเพื่อจัดการสินค้าส่งให้สาขา</div>
+        <button class="btn primary" onclick="$$('nav.tabs button[data-tab=\\'new\\']')[0]?.click()">+ สร้างใบเบิก</button>
+      </div>
+    </td></tr>`;
+  }
+};
+
+// =====================================================
+// SETTINGS — handle new fields (VAT, tax-id)
+// =====================================================
+const _renderSettingsOrigForVAT = renderSettings;
+renderSettings = function(){
+  _renderSettingsOrigForVAT();
+  if($("#set-vat")) $("#set-vat").value = state.settings.vat || 0;
+  if($("#set-tax-id")) $("#set-tax-id").value = state.settings.taxId || "";
+  if($("#auto-download-backup")) $("#auto-download-backup").checked = localStorage.getItem("kp_auto_download") === "1";
+  renderAuditLog();
+  renderBackupList();
+  setupExcelImport();
+};
+
+const _saveSettingsBtn = $("#btn-save-settings");
+if(_saveSettingsBtn){
+  _saveSettingsBtn.addEventListener("click", ()=>{
+    state.settings.vat = parseFloat($("#set-vat")?.value)||0;
+    state.settings.taxId = $("#set-tax-id")?.value||"";
+    saveState();
+  });
+}
+
+// =====================================================
+// Initial onboarding check + daily backup
+// =====================================================
+function checkOnboarding(){
+  if(!localStorage.getItem("kp_onboarded") && (state.salesRecords||[]).length === 0){
+    setTimeout(showOnboarding, 800);
+  }
+}
+
 // ------- INIT -------
 renderDashboard();
 populateCloudUI();
 initCloud();
+dailyBackup();
+checkOnboarding();
 
 </script>
 </body>
