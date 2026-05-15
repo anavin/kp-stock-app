@@ -63,6 +63,8 @@ nav.tabs button.active { background:#0f2c5a; color:#fff; }
 .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;}
 .toolbar .grow { flex:1; }
 .search-input { padding:8px 12px; border-radius:8px; border:1px solid #d4d8e3; font-size:13px; min-width:180px; font-family:inherit;}
+.date-input { width:170px !important; min-width:170px !important; max-width:170px !important; flex:0 0 170px !important; box-sizing:border-box;}
+input.date-input::-webkit-calendar-picker-indicator { cursor:pointer;}
 table.tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
 table.tbl th, table.tbl td { padding:8px 9px; text-align:left; border-bottom:1px solid #eef0f5; }
 table.tbl th { background:#fafbfd; font-weight:600; color:#414a66; font-size:11.5px; text-transform:uppercase; letter-spacing:.3px; position:sticky; top:0;}
@@ -1409,9 +1411,9 @@ body[data-role="staff"] .manager-only { display:none !important; }
         <option value="year">รายปี</option>
         <option value="custom">ช่วงวันที่กำหนดเอง</option>
       </select>
-      <input class="search-input" id="rep-from" type="date" title="วันที่เริ่ม">
+      <input class="search-input date-input" id="rep-from" type="date" title="วันที่เริ่ม">
       <span class="muted">ถึง</span>
-      <input class="search-input" id="rep-to" type="date" title="วันที่สิ้นสุด">
+      <input class="search-input date-input" id="rep-to" type="date" title="วันที่สิ้นสุด">
       <span class="muted" style="font-weight:600;font-size:12px;margin-left:8px;">🏢 สาขา:</span>
       <select id="rep-branch" class="search-input"><option value="">ทุกสาขา</option></select>
     </div>
@@ -1556,9 +1558,9 @@ body[data-role="staff"] .manager-only { display:none !important; }
   <div class="card report-filter-card">
     <div class="toolbar">
       <span class="muted" style="font-weight:600;font-size:12px;">📅 ช่วง:</span>
-      <input class="search-input" id="rec-from" type="date">
+      <input class="search-input date-input" id="rec-from" type="date">
       <span class="muted">ถึง</span>
-      <input class="search-input" id="rec-to" type="date">
+      <input class="search-input date-input" id="rec-to" type="date">
       <span class="muted" style="font-weight:600;font-size:12px;margin-left:8px;">🏢 สาขา:</span>
       <select id="rec-branch" class="search-input"><option value="">ทุกสาขา</option></select>
       <label class="flex-row" style="gap:6px;font-size:12px;color:#414a66;margin-left:8px;">
