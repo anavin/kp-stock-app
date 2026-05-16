@@ -995,12 +995,42 @@ body[data-role="staff"] .manager-only { display:none !important; }
 .sync-dot.offline { background:#a8731a; }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
 
-/* Login overlay */
+/* App body — hide content until auth resolved */
+body.app-locked .app-header,
+body.app-locked > section.page,
+body.app-locked > #scanner-indicator,
+body.app-locked > #sync-status,
+body.app-locked > .undo-toast { display:none !important; }
+body.app-locked { overflow:hidden; height:100vh;}
+body.app-locked .login-overlay { display:flex !important; }
+
+/* Login page — full screen */
 .login-overlay {
-  position:fixed; inset:0; background:linear-gradient(135deg,#1e6dd8 0%, #0a4cb0 100%);
+  position:fixed; inset:0;
+  background:linear-gradient(135deg, #1e6dd8 0%, #0a4cb0 50%, #0f2c5a 100%);
   display:flex; align-items:center; justify-content:center; padding:20px; z-index:9000;
+  overflow:auto;
+}
+.login-overlay::before {
+  content:""; position:absolute; inset:0;
+  background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,.08) 0%, transparent 40%),
+                    radial-gradient(circle at 80% 70%, rgba(255,255,255,.06) 0%, transparent 50%);
+  pointer-events:none;
 }
 .login-overlay.hidden { display:none; }
+.login-brand {
+  text-align:center; color:#fff; margin-bottom:30px; position:relative;
+}
+.login-brand-logo {
+  width:64px; height:64px; border-radius:16px;
+  background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.3);
+  margin:0 auto 12px; display:flex; align-items:center; justify-content:center;
+  font-size:28px; font-weight:800; letter-spacing:.5px;
+  backdrop-filter:blur(10px);
+}
+.login-brand-name { font-size:22px; font-weight:700; margin-bottom:4px;}
+.login-brand-tagline { font-size:13px; opacity:.85;}
+.login-card-wrap { display:flex; flex-direction:column; align-items:center; max-width:420px; width:100%; position:relative; z-index:1;}
 .login-card { background:#fff; border-radius:16px; padding:30px 34px; width:100%; max-width:400px; box-shadow:0 24px 64px rgba(15,44,90,.35);}
 .login-card h2 { font-size:20px; margin-bottom:6px; color:#0f2c5a;}
 .login-card .sub { font-size:13px; color:#69728a; margin-bottom:20px;}
@@ -2329,11 +2359,17 @@ body[data-role="staff"] .manager-only { display:none !important; }
   </div>
 </dialog>
 
-<!-- =================== LOGIN OVERLAY =================== -->
+<!-- =================== LOGIN PAGE =================== -->
 <div class="login-overlay hidden" id="login-overlay">
+  <div class="login-card-wrap">
+    <div class="login-brand">
+      <div class="login-brand-logo">LP</div>
+      <div class="login-brand-name">Lab Parfumo Stock</div>
+      <div class="login-brand-tagline">ระบบบริหารสต๊อกและการขาย • King Power 6 สาขา</div>
+    </div>
   <div class="login-card">
-    <h2 id="login-title">เข้าสู่ระบบ Cloud Sync</h2>
-    <div class="sub" id="login-sub">ใช้บัญชี Supabase ของคุณเพื่อ sync ข้อมูลระหว่างเครื่อง</div>
+    <h2 id="login-title">เข้าสู่ระบบ</h2>
+    <div class="sub" id="login-sub">ใช้บัญชีของคุณเพื่อใช้งานระบบ</div>
     <div class="field">
       <label>Email</label>
       <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
@@ -2373,6 +2409,10 @@ body[data-role="staff"] .manager-only { display:none !important; }
       <span id="login-secure-note" style="color:#69728a;font-size:11px;">🔒 จำเป็นต้องเข้าสู่ระบบเพื่อใช้งาน</span>
     </div>
   </div>
+  <div style="text-align:center;color:rgba(255,255,255,.7);font-size:11px;margin-top:18px;">
+    Touch Divergence Co., Ltd. • Lab Parfumo
+  </div>
+  </div><!-- /login-card-wrap -->
 </div>
 
 <!-- Preview dialog -->
@@ -4294,8 +4334,17 @@ saveState = function(){
 };
 
 // Login UI
-function showLogin(){ $("#login-overlay").classList.remove("hidden"); $("#login-email")?.focus(); }
-function hideLogin(){ $("#login-overlay").classList.add("hidden"); $("#login-err").textContent = ""; }
+function showLogin(){
+  document.body.classList.add("app-locked");
+  $("#login-overlay").classList.remove("hidden");
+  setTimeout(()=> $("#login-email")?.focus(), 100);
+}
+function hideLogin(){
+  document.body.classList.remove("app-locked");
+  $("#login-overlay").classList.add("hidden");
+  $("#login-err").textContent = "";
+  $("#login-err").style.color = "";
+}
 
 $("#btn-login")?.addEventListener("click", async ()=>{
   if(!supaClient){ $("#login-err").textContent = "กรุณาตั้งค่า URL และ Key ก่อน"; return; }
@@ -6843,6 +6892,15 @@ function checkOnboarding(){
 }
 
 // ------- INIT -------
+// Lock app immediately if Cloud Sync is configured (auth required)
+(function bootstrapAuthGate(){
+  const cfg = cloudConfig();
+  if(cfg.url && cfg.key){
+    document.body.classList.add("app-locked");
+    $("#login-overlay")?.classList.remove("hidden");
+  }
+})();
+
 renderDashboard();
 populateCloudUI();
 initCloud();
