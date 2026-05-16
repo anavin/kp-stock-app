@@ -4978,9 +4978,71 @@ $("#btn-rep-export")?.addEventListener("click", ()=>{
 });
 
 $("#btn-rep-pdf")?.addEventListener("click", async ()=>{
-  toast("กำลังสร้าง PDF...");
-  await exportPagePDF("page-reports", "Lab-Parfumo-Report-"+todayStr());
+  // Use print dialog approach — much more reliable than html2canvas for complex layouts
+  printReportPage();
 });
+
+// Open print dialog with report content rendered for printing — user picks "Save as PDF"
+function printReportPage(){
+  const el = document.getElementById("page-reports");
+  if(!el){ toast("ไม่พบเนื้อหา", true); return; }
+  // Wait for chart canvases to be fully rendered
+  const canvases = el.querySelectorAll("canvas");
+  // Capture chart images so they survive in the print window (Chart.js canvases are not cloneable)
+  const canvasImages = {};
+  canvases.forEach(c => {
+    try{ canvasImages[c.id] = c.toDataURL("image/png"); }catch(_){}
+  });
+
+  const w = window.open("", "_blank", "width=1100,height=900");
+  if(!w){ toast("กรุณาอนุญาต popup ในเบราว์เซอร์ก่อน", true); return; }
+
+  const mainStyles = Array.from(document.querySelectorAll("style")).map(s=>s.textContent).join("\n");
+
+  // Clone the report element
+  const clone = el.cloneNode(true);
+  // Replace canvases with <img> using captured data URLs
+  clone.querySelectorAll("canvas").forEach(c => {
+    const src = canvasImages[c.id];
+    if(src){
+      const img = w.document.createElement("img");
+      img.src = src;
+      img.style.maxWidth = "100%";
+      img.style.height = "auto";
+      img.style.display = "block";
+      c.parentNode.replaceChild(img, c);
+    }
+  });
+  // Remove export action buttons from the print
+  clone.querySelectorAll("#btn-rep-export, #btn-rep-pdf, .toolbar select, .toolbar input, .toolbar span").forEach(n => n.remove());
+
+  const styles = `<style>
+    @page { size: A4; margin: 12mm 8mm; }
+    body { margin:0; padding:8px; background:#fff; color:#0f2c5a;
+      font-family:"Sarabun","Noto Sans Thai","Segoe UI",-apple-system,sans-serif; font-size:12px; }
+    ${mainStyles}
+    /* Override for print */
+    .report-hero { background:linear-gradient(135deg,#0f2c5a,#1556b3) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .kpi-card, .insight-card, .branch-tile, .top-row, .slow-row, .card { -webkit-print-color-adjust:exact; print-color-adjust:exact; break-inside:avoid; }
+    .card { box-shadow:none !important; margin-bottom:8px !important; }
+    .charts-grid, .dash-row { display:block !important; }
+    .charts-grid > .card, .dash-row > .card { margin-bottom:10px !important; }
+    .table-wrap { max-height:none !important; overflow:visible !important; }
+    img { max-width:100% !important; }
+    .report-hero-actions, .toolbar, .no-print { display:none !important; }
+  </style>`;
+
+  w.document.write(`<html><head><meta charset="utf-8"><title>รายงาน Lab Parfumo - ${todayStr()}</title>${styles}</head><body>`);
+  w.document.body.appendChild(clone);
+  w.document.write(`</body></html>`);
+  w.document.close();
+
+  setTimeout(()=>{
+    w.focus();
+    w.print();
+  }, 800);
+  toast("📄 เปิด Print Dialog — เลือก Save as PDF เพื่อบันทึก");
+}
 
 // =====================================================
 // ------- PDF EXPORT -------
