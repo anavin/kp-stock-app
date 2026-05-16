@@ -4235,6 +4235,8 @@ async function onLoggedIn(){
   setSyncStatus("connected", supaUser.email.split("@")[0], "Connected • " + supaUser.email);
   updateCloudInfo(`✅ เชื่อมต่อแล้ว: <strong>${supaUser.email}</strong> • Sync ล่าสุด: ${localStorage.getItem(CLOUD_KEYS.lastSync) ? new Date(localStorage.getItem(CLOUD_KEYS.lastSync)).toLocaleString("th-TH") : "ยังไม่เคย"}`);
   hideLogin();
+  // Start 30-min session timer (warns at 25 min, auto-logout at 30 min)
+  if(typeof resetSessionTimer === "function") resetSessionTimer();
   // Pull data on first login
   await cloudPull(true);
   // Subscribe to realtime updates
@@ -5280,6 +5282,10 @@ function resetSessionTimer(){
   sessionWarned = false;
   clearTimeout(sessionWarnTimer);
   clearTimeout(sessionLogoutTimer);
+  if(typeof sessionCountdownInterval !== "undefined" && sessionCountdownInterval){
+    clearInterval(sessionCountdownInterval);
+    sessionCountdownInterval = null;
+  }
   // Hide warning if showing
   const warn = $("#session-warn");
   if(warn) warn.style.display = "none";
@@ -5291,7 +5297,9 @@ function resetSessionTimer(){
     if(supaUser) forceLogout();
   }, SESSION_IDLE_LIMIT);
 }
+window.resetSessionTimer = resetSessionTimer;
 
+let sessionCountdownInterval = null;
 function showSessionWarning(){
   sessionWarned = true;
   let warn = $("#session-warn");
@@ -5300,12 +5308,26 @@ function showSessionWarning(){
     warn.id = "session-warn";
     warn.className = "session-warn-bar";
     warn.innerHTML = `
-      <span>⏰ คุณไม่ได้ใช้งานมานานแล้ว — ระบบจะ logout ใน 5 นาที</span>
+      <span>⏰ คุณไม่ได้ใช้งานมานานแล้ว — ระบบจะ logout ใน <strong id="session-countdown">5:00</strong> นาที</span>
       <button class="btn sm primary" onclick="resetSessionTimer()">อยู่ต่อ</button>
     `;
     document.body.appendChild(warn);
   }
   warn.style.display = "flex";
+
+  // Live countdown
+  if(sessionCountdownInterval) clearInterval(sessionCountdownInterval);
+  let remaining = SESSION_IDLE_LIMIT - (Date.now() - lastActivity);
+  const cd = $("#session-countdown");
+  const update = () => {
+    remaining = SESSION_IDLE_LIMIT - (Date.now() - lastActivity);
+    if(remaining <= 0){ clearInterval(sessionCountdownInterval); return; }
+    const min = Math.floor(remaining / 60000);
+    const sec = Math.floor((remaining % 60000) / 1000);
+    if(cd) cd.textContent = `${min}:${String(sec).padStart(2,"0")}`;
+  };
+  update();
+  sessionCountdownInterval = setInterval(update, 1000);
 }
 
 async function forceLogout(){
