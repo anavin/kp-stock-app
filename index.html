@@ -68,7 +68,17 @@ nav.tabs button.active { background:#0f2c5a; color:#fff; }
 .field input, .field select, .field textarea {
   border:1px solid #d4d8e3; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; background:#fff;
   width:100%; box-sizing:border-box;
+  height:38px; line-height:1.2; vertical-align:top;
 }
+.field textarea { height:auto; min-height:60px; line-height:1.5; resize:vertical; }
+.field select {
+  appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%23414a66'/></svg>");
+  background-repeat:no-repeat; background-position:right 12px center;
+  padding-right:28px; cursor:pointer;
+}
+/* Date input — normalize padding */
+.field input[type="date"] { padding-right:8px; }
 .field input:focus, .field select:focus, .field textarea:focus { outline:2px solid #1e6dd8; outline-offset:-1px; border-color:#1e6dd8;}
 .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:1px solid #d4d8e3; background:#fff; font-size:13px; cursor:pointer; font-family:inherit; color:#0f2c5a; font-weight:500;}
 .btn:hover { background:#f0f1f6;}
@@ -693,6 +703,77 @@ dialog::backdrop { background:rgba(15,44,90,.4); }
   .report-hero { flex-direction:column; align-items:stretch; text-align:center;}
   .report-hero-content { justify-content:center;}
   .insights-bar { grid-template-columns:1fr;}
+}
+
+/* ==== Branch Comparison — Tile Grid (NEW) ==== */
+.branch-tiles {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:12px;
+}
+.branch-tile {
+  position:relative; background:#fff; border:1px solid #e3e6ee;
+  border-radius:14px; padding:18px 20px; overflow:hidden;
+  transition:all .2s; cursor:default;
+}
+.branch-tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(15,44,90,.10); }
+/* Top accent strip */
+.branch-tile::before {
+  content:""; position:absolute; left:0; top:0; bottom:0; width:5px;
+  background:#69728a;
+}
+.branch-tile.bt-rank-1::before { background:linear-gradient(180deg, #ffd700, #f0a500);}
+.branch-tile.bt-rank-2::before { background:linear-gradient(180deg, #d0d0d0, #999);}
+.branch-tile.bt-rank-3::before { background:linear-gradient(180deg, #d49058, #a35d20);}
+.branch-tile.bt-rank-1 { background:linear-gradient(135deg, #fffdf2 0%, #fff 70%); border-color:#f0d986;}
+
+/* Top row */
+.bt-head {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.bt-rank-badge {
+  width:36px; height:36px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:800;
+  background:#f0f4fb; color:#0f2c5a;
+}
+.bt-rank-1 .bt-rank-badge { background:linear-gradient(135deg, #ffd700, #f0a500); color:#fff; font-size:18px;}
+.bt-rank-2 .bt-rank-badge { background:linear-gradient(135deg, #d0d0d0, #999); color:#fff; font-size:18px;}
+.bt-rank-3 .bt-rank-badge { background:linear-gradient(135deg, #d49058, #a35d20); color:#fff; font-size:18px;}
+.bt-id {
+  flex:1; margin-left:12px; min-width:0;
+}
+.bt-id .bt-code { font-size:14px; font-weight:800; color:#0f2c5a; line-height:1.2;}
+.bt-id .bt-name { font-size:11px; color:#69728a; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bt-pct-badge {
+  padding:4px 10px; border-radius:99px; font-size:12px; font-weight:800;
+  background:#e6f0fc; color:#1e6dd8;
+}
+.bt-rank-1 .bt-pct-badge { background:#fff4cf; color:#a8731a;}
+
+/* Big value */
+.bt-value { font-size:26px; font-weight:800; color:#0f2c5a; font-variant-numeric:tabular-nums; line-height:1;}
+.bt-value-label { font-size:10px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-top:4px;}
+
+/* Stats row */
+.bt-stats { display:flex; gap:16px; margin-top:12px; padding-top:12px; border-top:1px dashed #e3e6ee;}
+.bt-stats .bt-stat { flex:1;}
+.bt-stats .bt-stat .v { font-size:15px; font-weight:700; color:#0f2c5a; font-variant-numeric:tabular-nums;}
+.bt-stats .bt-stat .l { font-size:10px; color:#69728a; font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-top:2px;}
+
+/* Bar */
+.bt-bar { margin-top:12px; height:8px; background:#eef0f5; border-radius:4px; overflow:hidden;}
+.bt-bar-fill {
+  height:100%; border-radius:4px; transition:width .6s ease-out;
+  background:linear-gradient(90deg, #1e6dd8 0%, #3b82f6 100%);
+}
+.bt-rank-1 .bt-bar-fill { background:linear-gradient(90deg, #f0a500, #ffd700);}
+.bt-rank-2 .bt-bar-fill { background:linear-gradient(90deg, #888, #c0c0c0);}
+.bt-rank-3 .bt-bar-fill { background:linear-gradient(90deg, #a35d20, #d49058);}
+
+@media (max-width: 480px) {
+  .branch-tiles { grid-template-columns:1fr;}
+  .bt-value { font-size:22px;}
 }
 
 /* Podium design — olympic style top 3 */
@@ -2484,8 +2565,55 @@ $$("#tabs button").forEach(b => {
   });
 });
 
-// Render branches as Olympic-style podium
+// Render branches as Tile Grid (NEW design)
+function renderBranchTiles(branchData, totalValue){
+  if(!branchData || branchData.length === 0) return '<div class="bc-empty">ยังไม่มียอดขายในช่วงนี้</div>';
+  const sorted = branchData.slice().sort((a,b)=>b.value-a.value);
+  const medals = { 1:"🥇", 2:"🥈", 3:"🥉" };
+  return '<div class="branch-tiles">' + sorted.map((b, i) => {
+    const rank = i + 1;
+    const pct = totalValue > 0 ? (b.value/totalValue*100) : 0;
+    const widthPct = sorted[0].value > 0 ? (b.value/sorted[0].value*100) : 0;
+    const rankClass = rank <= 3 ? `bt-rank-${rank}` : "";
+    const rankLabel = rank <= 3 ? medals[rank] : `#${rank}`;
+    const branchName = (b.name||"").replace(b.code+" - ","");
+    return `<div class="branch-tile ${rankClass}">
+      <div class="bt-head">
+        <div class="bt-rank-badge">${rankLabel}</div>
+        <div class="bt-id">
+          <div class="bt-code">${esc(b.code)}</div>
+          <div class="bt-name">${esc(branchName)}</div>
+        </div>
+        <div class="bt-pct-badge">${pct.toFixed(1)}%</div>
+      </div>
+      <div class="bt-value">${fmtMoney(b.value)}</div>
+      <div class="bt-value-label">มูลค่าขายรวม</div>
+      <div class="bt-stats">
+        <div class="bt-stat">
+          <div class="v">${b.qty||0}</div>
+          <div class="l">ขวด</div>
+        </div>
+        <div class="bt-stat">
+          <div class="v">${pct.toFixed(1)}%</div>
+          <div class="l">ของยอดรวม</div>
+        </div>
+        <div class="bt-stat">
+          <div class="v">฿${b.qty>0?Math.round(b.value/b.qty).toLocaleString("th-TH"):"-"}</div>
+          <div class="l">เฉลี่ย/ชวด</div>
+        </div>
+      </div>
+      <div class="bt-bar"><div class="bt-bar-fill" style="width:${widthPct.toFixed(1)}%;"></div></div>
+    </div>`;
+  }).join("") + '</div>';
+}
+
+// Keep renderPodium as alias for backward compatibility (if used elsewhere)
 function renderPodium(branchData, totalValue){
+  return renderBranchTiles(branchData, totalValue);
+}
+
+// Original podium implementation kept below as backup (renamed)
+function renderPodiumOld(branchData, totalValue){
   if(!branchData || branchData.length === 0) return '';
   // Sort descending by value
   const sorted = branchData.slice().sort((a,b)=>b.value-a.value);
