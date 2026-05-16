@@ -2365,7 +2365,8 @@ body[data-role="staff"] .manager-only { display:none !important; }
       <button class="btn" id="btn-signup">สมัครใหม่</button>
     </div>
     <div class="alt-action">
-      <a id="login-skip">ข้าม (ใช้ Local-only)</a>
+      <a id="login-skip" style="display:none;">ข้าม (ใช้ Local-only)</a>
+      <span id="login-secure-note" style="color:#69728a;font-size:11px;">🔒 จำเป็นต้องเข้าสู่ระบบเพื่อใช้งาน</span>
     </div>
   </div>
 </div>
@@ -2455,26 +2456,15 @@ function defaultState(){
       soldByBranch[b.code][p.barcode] = 0;
     });
   });
-  // Aggregate received from historical slips (for display in สต๊อก page)
-  HISTORICAL_SLIPS.forEach(slip => {
-    slip.items.forEach(it => {
-      if(receivedByBranch[slip.branchCode] && receivedByBranch[slip.branchCode][it.barcode] != null){
-        receivedByBranch[slip.branchCode][it.barcode] += it.qty;
-      }
-    });
-  });
-  // Aggregate sold from historical sales
-  HISTORICAL_SALES.forEach(sale => {
-    if(soldByBranch[sale.branchCode] && soldByBranch[sale.branchCode][sale.barcode] != null){
-      soldByBranch[sale.branchCode][sale.barcode] += sale.qty;
-    }
-  });
+  // NOTE: Historical data is NOT pre-loaded into default state for security.
+  // Anyone opening the app would otherwise see all real sales/slips data.
+  // Use the "นำเข้าข้อมูลย้อนหลัง" button in Settings to import manually after login.
   return {
     stockByBranch,
     receivedByBranch,
     soldByBranch,
-    slips: HISTORICAL_SLIPS.slice(),
-    salesRecords: HISTORICAL_SALES.slice(),
+    slips: [],
+    salesRecords: [],
     settings: {
       userName: "Anavin",
       poStart: 201515429,
@@ -4165,7 +4155,11 @@ function updateCloudInfo(text, isErr=false){
 
 async function initCloud(){
   const cfg = cloudConfig();
-  if(!cfg.url || !cfg.key){ setSyncStatus("", "Local only", "ยังไม่ได้เชื่อม Cloud"); return; }
+  if(!cfg.url || !cfg.key){
+    setSyncStatus("", "Local only", "ยังไม่ได้เชื่อม Cloud");
+    updateLoginSkipVisibility && updateLoginSkipVisibility();
+    return;
+  }
   if(typeof window.supabase === "undefined"){
     setSyncStatus("error", "SDK ไม่โหลด", "Supabase SDK ไม่พร้อม — เช็ค internet");
     return;
@@ -4179,7 +4173,12 @@ async function initCloud(){
       supaUser = session.user;
       onLoggedIn();
     } else {
-      setSyncStatus("offline", "ยังไม่ login", "คลิกเพื่อเข้าสู่ระบบ");
+      // SECURITY: Cloud is configured but not logged in → MUST login (auth wall)
+      // Clear any cached state so unauthenticated users see no data
+      state = defaultState();
+      saveState();
+      setSyncStatus("offline", "🔒 ต้องเข้าสู่ระบบ", "Click to login");
+      updateLoginSkipVisibility();
       showLogin();
     }
   }catch(e){
@@ -4320,7 +4319,25 @@ $("#btn-signup")?.addEventListener("click", async ()=>{
   }
 });
 
-$("#login-skip")?.addEventListener("click", ()=>{ hideLogin(); setSyncStatus("", "Local only", "ใช้งานแบบ Local อย่างเดียว"); });
+// Skip option only available if Supabase NOT configured (true offline mode)
+$("#login-skip")?.addEventListener("click", ()=>{
+  if(cloudConfig().url && cloudConfig().key){
+    toast("⚠️ ระบบนี้ต้องเข้าสู่ระบบ — เนื่องจากเปิด Cloud Sync ไว้", true);
+    return;
+  }
+  hideLogin();
+  setSyncStatus("", "Local only", "ใช้งานแบบ Local อย่างเดียว");
+});
+
+// Show/hide skip option based on Supabase config
+function updateLoginSkipVisibility(){
+  const cfg = cloudConfig();
+  const skipEl = $("#login-skip");
+  const secureNote = $("#login-secure-note");
+  const isCloudConfigured = !!(cfg.url && cfg.key);
+  if(skipEl) skipEl.style.display = isCloudConfigured ? "none" : "";
+  if(secureNote) secureNote.style.display = isCloudConfigured ? "" : "none";
+}
 
 $("#btn-cloud-connect")?.addEventListener("click", async ()=>{
   const url = $("#cloud-url").value.trim();
@@ -4332,16 +4349,20 @@ $("#btn-cloud-connect")?.addEventListener("click", async ()=>{
 });
 
 $("#btn-cloud-disconnect")?.addEventListener("click", async ()=>{
-  if(!confirm("ต้องการ disconnect Cloud และ logout ใช่หรือไม่?")) return;
+  if(!await customConfirm("ต้องการ <strong>disconnect Cloud และ logout</strong>?<br><br>⚠️ ข้อมูลในเครื่องจะถูกล้างเพื่อความปลอดภัย — ใช้เมื่อจะใช้แอปแบบ Local-only เท่านั้น", "ยืนยัน Disconnect")) return;
   if(supaClient){ await supaClient.auth.signOut(); }
   localStorage.removeItem(CLOUD_KEYS.url);
   localStorage.removeItem(CLOUD_KEYS.key);
   localStorage.removeItem(CLOUD_KEYS.lastSync);
   supaUser = null; supaClient = null;
+  // SECURITY: clear local state on disconnect — prevent leaked data
+  state = defaultState();
+  saveState();
   $("#cloud-url").value = ""; $("#cloud-key").value = "";
   setSyncStatus("", "Local only", "Local only");
   updateCloudInfo("⚪ ยังไม่ได้เชื่อมต่อ");
-  toast("Disconnect เรียบร้อย");
+  toast("Disconnect เรียบร้อย — ข้อมูลถูกล้าง");
+  renderDashboard();
 });
 
 $("#btn-cloud-push")?.addEventListener("click", ()=>cloudPush(false));
@@ -5239,6 +5260,9 @@ async function forceLogout(){
   toast("⏰ Session หมดอายุ — กรุณา login ใหม่", true);
   if(supaClient){ await supaClient.auth.signOut(); }
   supaUser = null;
+  // SECURITY: clear local state so unauthenticated users can't see cached data
+  state = defaultState();
+  saveState();
   setSyncStatus("offline", "Session หมดอายุ", "");
   showLogin();
   resetSessionTimer();
