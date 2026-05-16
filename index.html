@@ -4346,6 +4346,8 @@ function hideLogin(){
   $("#login-overlay").classList.add("hidden");
   $("#login-err").textContent = "";
   $("#login-err").style.color = "";
+  // Check onboarding when user enters app (only if hasn't seen yet)
+  if(typeof checkOnboarding === "function") setTimeout(checkOnboarding, 500);
 }
 
 $("#btn-login")?.addEventListener("click", async ()=>{
@@ -4390,8 +4392,18 @@ function updateLoginSkipVisibility(){
   const skipEl = $("#login-skip");
   const secureNote = $("#login-secure-note");
   const isCloudConfigured = !!(cfg.url && cfg.key);
-  if(skipEl) skipEl.style.display = isCloudConfigured ? "none" : "";
+  if(skipEl){
+    skipEl.style.display = isCloudConfigured ? "none" : "";
+    skipEl.textContent = isCloudConfigured ? "ข้าม (ใช้ Local-only)" : "👉 ยังไม่มีบัญชี? เข้าใช้แบบ Local-only";
+  }
   if(secureNote) secureNote.style.display = isCloudConfigured ? "" : "none";
+  // Also update form heading + sub based on state
+  const titleEl = $("#login-title");
+  const subEl = $("#login-sub");
+  if(!isCloudConfigured && titleEl && subEl){
+    titleEl.textContent = "เข้าสู่ระบบ";
+    subEl.innerHTML = `ใช้บัญชีของคุณเพื่อใช้งานระบบ<br><span style="font-size:11px;color:#a8731a;">⚠️ ยังไม่ได้ตั้งค่า Cloud Sync — ใส่ Supabase URL+Key ในหน้าตั้งค่าก่อน หรือกด "เข้าใช้แบบ Local-only" ด้านล่าง</span>`;
+  }
 }
 
 $("#btn-cloud-connect")?.addEventListener("click", async ()=>{
@@ -6914,20 +6926,20 @@ function checkOnboarding(){
 }
 
 // ------- INIT -------
-// Lock app immediately if Cloud Sync is configured (auth required)
+// Lock app on EVERY page load — user must login OR explicitly pick Local-only mode
 (function bootstrapAuthGate(){
-  const cfg = cloudConfig();
-  if(cfg.url && cfg.key){
-    document.body.classList.add("app-locked");
-    $("#login-overlay")?.classList.remove("hidden");
-  }
+  document.body.classList.add("app-locked");
+  $("#login-overlay")?.classList.remove("hidden");
+  // Show skip button if no cloud config (allow Local-only mode entry)
+  setTimeout(()=>{ if(typeof updateLoginSkipVisibility === "function") updateLoginSkipVisibility(); }, 0);
 })();
 
 renderDashboard();
 populateCloudUI();
 initCloud();
 dailyBackup();
-checkOnboarding();
+// Onboarding shows only after user is in (not on login page)
+// checkOnboarding moved to after login
 
 </script>
 </body>
