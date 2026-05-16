@@ -2607,10 +2607,10 @@ function renderDashboard(){
   const valueChange = prevValue>0 ? ((periodValue-prevValue)/prevValue*100) : 0;
   const qtyChange = prevQty>0 ? ((periodQty-prevQty)/prevQty*100) : 0;
 
-  // Stock value across all branches
+  // Stock value across visible branches only
   let stockValue=0, stockUnits=0, lowCount=0;
   PRODUCTS.forEach(p=>{
-    BRANCHES.forEach(b=>{
+    visibleBranches().forEach(b=>{
       const q = state.stockByBranch[b.code]?.[p.barcode] || 0;
       stockUnits += q;
       stockValue += q * (p.price||0);
@@ -4052,7 +4052,8 @@ function subscribeRealtime(){
   if(supaChannel){ supaClient.removeChannel(supaChannel); supaChannel = null; }
   supaChannel = supaClient.channel("app_state_changes")
     .on("postgres_changes", { event:"UPDATE", schema:"public", table:"app_state" }, payload => {
-      const newVersion = payload.new.version;
+      const newVersion = payload.new?.version;
+      if(typeof newVersion !== "number") return;
       if(newVersion > lastRemoteVersion && payload.new.updated_by !== supaUser?.id){
         // Another device updated — pull silently after short delay
         setTimeout(()=>cloudPull(true), 500);
@@ -4084,6 +4085,8 @@ async function cloudPush(silent=false){
 
 async function cloudPull(silent=false){
   if(!supaClient || !supaUser){ if(!silent) toast("กรุณา login ก่อน", true); return; }
+  // Cancel any pending auto-push so we don't overwrite the data we just pulled
+  if(autoSyncTimer){ clearTimeout(autoSyncTimer); autoSyncTimer = null; }
   if(!silent && !confirm("⬇ ดึงข้อมูลล่าสุดจาก Cloud จะทับข้อมูลในเครื่องนี้ — ดำเนินการต่อ?")) return;
   setSyncStatus("syncing", "กำลัง pull…", "Pulling...");
   try{
@@ -4113,10 +4116,13 @@ async function cloudPull(silent=false){
     updateCloudInfo(`✅ ดึงข้อมูลล่าสุดแล้ว: ${new Date().toLocaleString("th-TH")} • version ${data.version}`);
     // Refresh current page
     const activeTab = $$("#tabs button.active")[0]?.dataset.tab;
-    if(activeTab==="dashboard") renderDashboard();
-    else if(activeTab==="stock") renderStock();
-    else if(activeTab==="sales") renderSales();
-    else if(activeTab==="history") renderHistory();
+    const renderMap = {
+      dashboard: renderDashboard, stock: renderStock, sales: renderSales,
+      history: renderHistory, reports: renderReports, reconcile: renderReconcile,
+      returns: renderReturns, master: renderMaster, users: renderUsers, settings: renderSettings,
+      new: renderNewSlip
+    };
+    if(renderMap[activeTab]) renderMap[activeTab]();
   }catch(e){
     setSyncStatus("error", "Pull ล้มเหลว", e.message);
     if(!silent) toast("Pull ล้มเหลว: "+e.message, true);
@@ -4252,8 +4258,7 @@ function setUserRole(role, branchCode){
   if(sb) sb.innerHTML = visibleBranches().map(b=>`<option value="${b.code}">${b.name}</option>`).join("");
 })();
 
-// Toggle signup extras when sign up clicked
-$("#btn-signup")?.addEventListener("click", ()=>{ $("#signup-extras").style.display = "block"; }, true);
+// (removed — show-extras handled inside the main signup handler below)
 
 // Show role in sync indicator label after login
 function refreshRoleBadge(){
@@ -4276,15 +4281,30 @@ if(_onLoggedInOrig){
 }
 
 // Hook signup to include role/branch in user_metadata
+// Track signup state — first click shows extras, second click does signup
+let _signupExpanded = false;
 const _btnSignup = $("#btn-signup");
 if(_btnSignup){
-  _btnSignup.removeEventListener && _btnSignup.replaceWith(_btnSignup.cloneNode(true));
+  _btnSignup.replaceWith(_btnSignup.cloneNode(true));
   $("#btn-signup")?.addEventListener("click", async ()=>{
+    // First click: show extras (role + branch + password strength)
+    if(!_signupExpanded){
+      _signupExpanded = true;
+      $("#signup-extras").style.display = "block";
+      $("#login-err").textContent = "ℹ️ เลือก Role + สาขา แล้วกด สมัครใหม่ อีกครั้งเพื่อยืนยัน";
+      $("#login-err").style.color = "#1e6dd8";
+      return;
+    }
+    // Second click: actual signup
+    $("#login-err").style.color = "";
     if(!supaClient){ $("#login-err").textContent = "กรุณาตั้งค่า URL และ Key ก่อน"; return; }
     const email = $("#login-email").value.trim(); const pwd = $("#login-password").value;
     const role = $("#signup-role").value || "staff";
     const branch = $("#signup-branch").value || "";
-    if(!email || !pwd){ $("#login-err").textContent = "กรุณากรอก Email และ Password (อย่างน้อย 6 ตัวอักษร)"; return; }
+    if(!email || !pwd){ $("#login-err").textContent = "กรุณากรอก Email และ Password (อย่างน้อย 8 ตัว)"; return; }
+    if(pwd.length < 8 || !/[a-zA-Z]/.test(pwd) || !/\d/.test(pwd)){
+      $("#login-err").textContent = "Password ต้องอย่างน้อย 8 ตัว + มีตัวเลข + ตัวอักษร"; return;
+    }
     $("#login-err").textContent = "กำลังสมัครสมาชิก...";
     const { data, error } = await supaClient.auth.signUp({
       email, password: pwd,
@@ -4292,11 +4312,20 @@ if(_btnSignup){
     });
     if(error){ $("#login-err").textContent = "สมัครไม่สำเร็จ: " + error.message; return; }
     if(data.user && data.session){
-      supaUser = data.user; $("#login-password").value = ""; onLoggedIn();
+      supaUser = data.user; $("#login-password").value = ""; _signupExpanded = false; onLoggedIn();
     } else {
       $("#login-err").textContent = "✉️ สมัครเรียบร้อย — กรุณายืนยันอีเมลก่อน login";
     }
   });
+}
+// Reset expanded state when login overlay shown again
+const _origShowLogin = typeof showLogin === "function" ? showLogin : null;
+if(_origShowLogin){
+  showLogin = function(){
+    _signupExpanded = false;
+    if($("#signup-extras")) $("#signup-extras").style.display = "none";
+    _origShowLogin();
+  };
 }
 
 // =====================================================
@@ -5002,11 +5031,18 @@ async function forceLogout(){
   resetSessionTimer();
 }
 
-// Listen for any user activity to reset timer
+// Listen for any user activity to reset timer (debounced — reset only every 30s)
 ["click","keydown","mousemove","scroll","touchstart"].forEach(ev =>
   document.addEventListener(ev, () => {
-    if(supaUser && (Date.now() - lastActivity > 30000)) resetSessionTimer();
-    else lastActivity = Date.now();
+    const now = Date.now();
+    // Always update lastActivity
+    if(now - lastActivity > 30000 && supaUser){
+      // reset full timer (including warning)
+      lastActivity = now;
+      resetSessionTimer();
+    } else {
+      lastActivity = now;
+    }
   }, { passive: true })
 );
 
@@ -5102,6 +5138,8 @@ $("#forgot-password")?.addEventListener("click", async ()=>{
 let _confirmResolve = null;
 function customConfirm(message, title="ยืนยัน"){
   return new Promise(resolve => {
+    // If a previous confirm is open, resolve it as cancel
+    if(_confirmResolve){ _confirmResolve(false); }
     _confirmResolve = resolve;
     $("#confirm-title").textContent = title;
     $("#confirm-message").innerHTML = message;
@@ -5536,9 +5574,9 @@ function filterRenderUsers(){
       <td><span class="muted" style="font-size:11px;">${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("th-TH") : "—"}</span></td>
       <td class="center">${u.email_confirmed ? '<span class="pill green">✓</span>' : '<span class="pill amber">รอยืนยัน</span>'}</td>
       <td class="center">
-        <button class="btn sm user-edit" data-id="${u.id}" data-email="${esc(u.email)}" data-role="${u.role}" data-branch="${u.branch_code}">แก้</button>
-        <button class="btn sm user-reset" data-email="${esc(u.email)}">🔑</button>
-        ${isMe?'':`<button class="btn sm danger user-delete" data-id="${u.id}" data-email="${esc(u.email)}">ลบ</button>`}
+        <button class="btn sm user-edit" data-id="${u.id}" data-email="${esc(u.email||'')}" data-role="${u.role||'staff'}" data-branch="${u.branch_code||''}">แก้</button>
+        <button class="btn sm user-reset" data-email="${esc(u.email||'')}">🔑</button>
+        ${isMe?'':`<button class="btn sm danger user-delete" data-id="${u.id}" data-email="${esc(u.email||'')}">ลบ</button>`}
       </td>
     </tr>`;
   }).join("");
@@ -5744,7 +5782,7 @@ function showImportDetails(batch, records){
       <thead><tr><th>วันที่</th><th>สินค้า</th><th class="num">จำนวน</th><th class="num">ราคา</th><th class="num">รวม</th></tr></thead>
       <tbody>${records.map(r=>`<tr>
         <td>${r.date}</td>
-        <td>${r.scent} <span class="muted">• ${r.size}</span></td>
+        <td>${esc(r.scent)} <span class="muted">• ${esc(r.size)}</span></td>
         <td class="num">${r.qty}</td>
         <td class="num">${fmtMoney(r.price)}</td>
         <td class="num">${fmtMoney(r.value)}</td>
@@ -6167,9 +6205,9 @@ function renderReconcile(){
     const matched = r.diff === 0;
     return `<tr class="${matched?'match':'mismatch'}">
       <td><span class="muted">${r.p.goods_code||"-"}</span></td>
-      <td>${r.p.scent}</td>
+      <td>${esc(r.p.scent)}</td>
       <td>${r.p.size}</td>
-      <td><span class="pill blue">${r.branch}</span></td>
+      <td><span class="pill blue">${esc(r.branch)}</span></td>
       <td class="num">${r.sent}</td>
       <td class="num">${r.sold}</td>
       <td class="num">${r.remain}</td>
@@ -6229,8 +6267,8 @@ function renderReturns(){
     const reasonLabels = { damaged:"🔨 ชำรุด", expired:"⏰ หมดอายุ", "customer-return":"↩️ ลูกค้าคืน", lost:"❓ สูญหาย", found:"🎁 พบเพิ่ม", other:"📝 อื่น ๆ" };
     body.innerHTML = filtered.map(r => `<tr>
       <td>${thaiDate(r.date)}</td>
-      <td><span class="pill blue">${r.branch}</span></td>
-      <td>${r.scent} <span class="muted">• ${r.size}</span></td>
+      <td><span class="pill blue">${esc(r.branch)}</span></td>
+      <td>${esc(r.scent)} <span class="muted">• ${esc(r.size)}</span></td>
       <td class="num"><strong>${r.qty}</strong></td>
       <td><span class="reason-chip reason-${r.reason}">${reasonLabels[r.reason]||r.reason}</span></td>
       <td><span class="muted">${esc(r.note||"-")}</span></td>
